@@ -1,0 +1,224 @@
+[
+  {
+    "name": "log_router",
+    "essential": true,
+    "image": "docker.io/amazon/aws-for-fluent-bit:latest",
+    "firelensConfiguration": {
+      "type": "fluentbit",
+      "options": {
+        "enable-ecs-log-metadata": "true"
+      }
+    },
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "awslogs-inform-staging",
+        "awslogs-region": "us-west-2",
+        "awslogs-stream-prefix": "ecs-fluentbit-enterprise-production"
+      }
+    }
+  },
+  {
+    "name": "enterpriseapi",
+    "image": "${enterpriseapi_runner_repo}",
+    "essential": true,
+    "logConfiguration": {
+      "logDriver": "awsfirelens",
+      "secretOptions": [
+        {
+          "name": "HTTP_Passwd",
+          "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/elastic/logger_password-KRSk2A"
+        }
+      ],
+      "options": {
+        "Name": "es",
+        "Host": "d5ee0b43b3d94aee9fe505182a115978.us-west-2.aws.found.io",
+        "Port": "9243",
+        "HTTP_User": "aws_logger",
+        "tls": "On",
+        "Logstash_Format": "On",
+        "Logstash_Prefix": "enterpriseapi-production"
+      }
+    },
+    "portMappings": [
+      {
+        "containerPort": 1500,
+        "hostPort": 1500,
+        "protocol": "tcp"
+      }
+    ],
+    "environment": [
+      {
+        "name": "ELASTIC_APM_TRANSACTION_SAMPLE_RATE",
+        "value": "1"
+      },
+      {
+        "name": "ELASTIC_APM_SERVICE_NAME",
+        "value": "enterprise-api"
+      },
+      {
+        "name": "ELASTIC_APM_SERVICE_VERSION",
+        "value": "${enterpriseapi_tag}"
+      },
+      {
+        "name": "ELASTIC_APM_ENVIRONMENT",
+        "value": "production"
+      },
+      {
+        "name": "ELASTIC_APM_ACTIVE",
+        "value": "true"
+      },
+      {
+        "name": "ENABLE_MOCK_UPLOADER",
+        "value": "false"
+      },
+      {
+        "name": "S3_BUCKET",
+        "value": "enterpriseapi-production"
+      },
+      {
+        "name": "MODE",
+        "value": "production"
+      },
+      {
+        "name": "EMAIL_DEFAULT_SENDER_ADDRESS",
+        "value": "people@bento.africa"
+      },
+      {
+        "name": "EMAIL_DEFAULT_SENDER_NAME",
+        "value": "Bento Enterprise"
+      },
+      {
+        "name": "NODE_ENV",
+        "value": "production"
+      },
+      {
+        "name": "LOG_LEVEL",
+        "value": "info"
+      },
+      {
+        "name": "CONSUL_HOST",
+        "value": "ec2-52-88-245-118.us-west-2.compute.amazonaws.com"
+      },
+      {
+        "name": "JWT_EXPIRES_IN",
+        "value": "24h"
+      },
+      {
+        "name": "PORT",
+        "value": "1500"
+      },
+      {
+        "name": "SCRIPTSIGN_BASE_URL",
+        "value": "https://scriptsign.bento.africa/"
+      },
+      {
+        "name": "TERMII_SMS_URL",
+        "value": "https://termii.com/api/"
+      },
+      {
+        "name": "PEOPLE_API_URL",
+        "value": "https://hrmapi.bento.africa/"
+      },
+      {
+        "name": "API_URL",
+        "value": "https://enterpriseapi.bento.africa/"
+      },
+      {
+        "name": "TAX_SERVICE_BASE_URL",
+        "value": "https://devtax.bento.africa/api/v1"
+      },
+      {
+        "name": "PAYSTACK_API_KEY",
+        "value": "pk_live_ce816e7a976973baa403f647c7d76d449250b0bd"
+      },
+      {
+        "name": "PAYSTACK_API_URL",
+        "value": "https://api.paystack.co/"
+      },
+      {
+        "name": "SLACK_URL",
+        "value": "https://hooks.slack.com/services/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"
+      },
+      {
+        "name": "KAIROS_APP_ID",
+        "value": "f7c30ca5"
+      },
+      {
+        "name": "KAIROS_APP_KEY",
+        "value": "846a55df17ca079b6d7cad3fb271f661"
+      },
+      {
+        "name": "KAIROS_GALLERY",
+        "value": "pay4pub"
+      }
+    ],
+    "secrets": [
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/elastic/apm/secret_token-4HBbCe",
+        "name": "ELASTIC_APM_SECRET_TOKEN"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/elastic/apm/server_url-p1qT2z",
+        "name": "ELASTIC_APM_SERVER_URL"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:enterpriseapi/production/mongo/url-IPyGec",
+        "name": "DATABASE_HOST"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:peoplehrm/jwt/secret-xte3W2",
+        "name": "JWT_SECRET"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:payapi/staging/loggly/token-SRYpck",
+        "name": "LOGGLY_TOKEN"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:payapi/staging/loggly/subdomain-Rp7z5B",
+        "name": "LOGGLY_SUBDOMAIN"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:peoplehrm/staging/scriptsign_key-3wbbM9",
+        "name": "SCRIPTSIGN_API_KEY"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:shared/sparkpost/api_key-nXYz0b",
+        "name": "SPARKPOST_API_KEY"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:shared/termii/api_key-vO5XWz",
+        "name": "TERMII_SMS_KEY"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/enterpriseapi/people/api_key-XgPxup",
+        "name": "PEOPLE_APP_KEY"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:staging/enterpriseapi/people/api_id-Fhfhap",
+        "name": "PEOPLE_APP_ID"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/enterpriseapi/taxservice/api_id-o86PNE",
+        "name": "TAX_SERVICE_CLIENT_ID"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:production/enterpriseapi/taxservice/api_secret-sn6Sbi",
+        "name": "TAX_SERVICE_CLIENT_SECRET"
+      },
+      {
+        "valueFrom": "arn:aws:secretsmanager:us-west-2:847883372847:secret:enterpriseapi/production/paystack/api_secret-iHAF7A",
+        "name": "PAYSTACK_API_SECRET"
+      }
+    ],
+    "ulimits": [
+      {
+        "name": "nofile",
+        "softLimit": 65536,
+        "hardLimit": 65536
+      }
+    ],
+    "mountPoints": [],
+    "volumesFrom": []
+  }
+]

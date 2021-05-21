@@ -1,0 +1,248 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@0.1.6
+  aws-ecr: circleci/aws-ecr@6.0.0
+  aws-ecs: circleci/aws-ecs@0.0.8
+
+jobs:
+  static-analysis:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:12.18.2-stretch
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - v3-yarn-packages-{{ checksum "yarn.lock" }}
+      - run: yarn install
+      - run: yarn run lint
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: v3-yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+
+  test:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:12.18.2-stretch
+      - image: circleci/mongo:4.2.8
+        command: [mongod, "--replSet", "rs0"]
+      - image: localstack/localstack
+    working_directory: /home/circleci/project/enterprise
+    environment:
+      DEBUG: "true"
+      SERVICES: "serverless"
+      DATA_DIR: "/tmp/localstack/data"
+      DEFAULT_REGION: "us-west-2"
+      AWS_DEFAULT_REGION: "us-west-2"
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+      MODE: "test"
+
+    steps:
+      # Dependecies.
+      - run:
+          name: Install MongoDB Shell 4.0
+          command: |
+            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+            echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/4.0 main" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
+            sudo apt-get update
+            sudo apt-get install -y --force-yes mongodb-org-shell
+      # Config
+      - run:
+          name: Configure Replica
+          command: |
+            mongo admin --eval 'rs.initiate()'
+      - run:
+          name: Configure MongoDB
+          command: |
+            mongo admin --eval 'db.createUser({ user: "mongo-admin-username", pwd: "mongo-admin-secret", roles: [{ role: "root", db: "admin" }]})'
+      - checkout
+      - run:
+          name: Wait for Mongo to start
+          # preinstalled in circleci/* docker image
+          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 240s
+
+      # Download and cache dependencies
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - v3-yarn-packages-{{ checksum "yarn.lock" }}
+      - run: yarn install
+      # - run: node local-aws.js
+      - run: yarn run test:cov
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: v3-yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - store_artifacts:
+          path: coverage
+      - store_test_results:
+          path: coverage
+
+  build-staging:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:12.13.1-stretch
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+      CI_SERVER: "yes"
+
+    steps:
+      - checkout
+      - aws-cli/install
+      - aws-cli/configure
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - aws-ecr/ecr-login
+      - run:
+          name: "Build app"
+          command: make build env=staging
+
+  plan-staging:
+    docker:
+      - image: hashicorp/terraform:0.13.4
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+
+    steps:
+      - checkout
+      - run: echo "credentials \"app.terraform.io\" { token = \""$TERRAFORM_TOKEN"\" }" > $HOME/.terraformrc
+      - run:
+          name: terraform plan
+          command: |
+            export TF_VAR_payapi_tag=$CIRCLE_SHA1
+            cd _deployments/terraform/envs/staging
+            terraform init
+            terraform plan
+
+  deploy-staging:
+    docker:
+      - image: hashicorp/terraform:0.13.4
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+      CI_SERVER: "yes"
+
+    steps:
+      - checkout
+      - run: echo "credentials \"app.terraform.io\" { token = \""$TERRAFORM_TOKEN"\" }" > $HOME/.terraformrc
+      - run:
+          name: terraform deploy
+          command: |
+            export TF_VAR_payapi_tag=$CIRCLE_SHA1
+            cd _deployments/terraform/envs/staging
+            terraform init
+            terraform apply -auto-approve
+
+  build-production:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:12.13.1-stretch
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+      CI_SERVER: "yes"
+
+    steps:
+      - checkout
+      - aws-cli/install
+      - aws-cli/configure
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - aws-ecr/ecr-login
+      - run:
+          name: "Build app"
+          command: make build env=production
+
+  plan-production:
+    docker:
+      - image: hashicorp/terraform:0.13.4
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+
+    steps:
+      - checkout
+      - run: echo "credentials \"app.terraform.io\" { token = \""$TERRAFORM_TOKEN"\" }" > $HOME/.terraformrc
+      - run:
+          name: terraform plan
+          command: |
+            export TF_VAR_payapi_tag=$CIRCLE_SHA1
+            cd _deployments/terraform/envs/production
+            terraform init
+            terraform plan
+
+  deploy-production:
+    docker:
+      - image: hashicorp/terraform:0.13.4
+    environment:
+      TZ: "/usr/share/zoneinfo/Africa/Lagos"
+      CI_SERVER: "yes"
+
+    steps:
+      - checkout
+      - run: echo "credentials \"app.terraform.io\" { token = \""$TERRAFORM_TOKEN"\" }" > $HOME/.terraformrc
+      - run:
+          name: terraform deploy
+          command: |
+            export TF_VAR_payapi_tag=$CIRCLE_SHA1
+            cd _deployments/terraform/envs/production
+            terraform init
+            terraform apply -auto-approve
+
+workflows:
+  test-build-deploy-v3:
+    jobs:
+      - static-analysis:
+          filters:
+            branches:
+              ignore:
+                - dev
+                - master
+      # - test:
+      #     requires:
+      #       - static-analysis
+      - build-staging:
+          context: infra_data
+          filters:
+            branches:
+              only: dev
+      - plan-staging:
+          context: infra_data
+          filters:
+            branches:
+              only: dev
+          requires:
+            - build-staging
+      - deploy-staging:
+          context: infra_data
+          filters:
+            branches:
+              only: dev
+          requires:
+            - plan-staging
+      - build-production:
+          context: infra_data
+          filters:
+            branches:
+              only:
+                - master
+      - plan-production:
+          context: infra_data
+          filters:
+            branches:
+              only: master
+          requires:
+            - build-production
+      - deploy-production:
+          context: infra_data
+          filters:
+            branches:
+              only: master
+          requires:
+            - plan-production
