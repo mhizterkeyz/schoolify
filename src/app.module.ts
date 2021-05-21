@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { configuration } from './config';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { configuration } from './config';
       useUnifiedTopology: true,
       useFindAndModify: false,
     }),
+    LoggerModule,
   ],
 })
 export class AppModule {}
