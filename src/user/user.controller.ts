@@ -1,7 +1,7 @@
 import { Controller, Inject } from '@nestjs/common';
 
 import { APPLICATION_NAME, LOGGER } from '@src/constants';
-import { Logger } from '@src/logger';
+import { Logger } from '@logger/index';
 import { ResponseService } from '@src/util';
 
 @Controller('users')
