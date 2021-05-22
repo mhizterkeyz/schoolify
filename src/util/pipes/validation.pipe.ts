@@ -1,4 +1,5 @@
 import { ValidationError, ValidationPipe as VP } from '@nestjs/common';
+
 import { ValidationException } from '../exceptions/validation.exception';
 
 export class ValidationPipe extends VP {
@@ -18,10 +19,15 @@ export class ValidationPipe extends VP {
               if (Array.isArray(error.children) && error.children.length) {
                 constraints = formatErrors(error.children);
               } else {
-                constraints =
-                  (error.constraints &&
-                    Object.values(error.constraints).join(', ')) ||
-                  '';
+                const hasContraints = !!error.constraints;
+                if (hasContraints) {
+                  let items = Object.values(error.constraints);
+                  const lastItem = items.pop();
+                  items = [items.join(', '), lastItem].filter(item => item);
+                  constraints = items.join(' and ');
+                } else {
+                  constraints = '';
+                }
               }
               return {
                 ...accumulator,

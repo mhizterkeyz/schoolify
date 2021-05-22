@@ -3,7 +3,9 @@ import { Schema, SchemaOptions } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Document } from 'mongoose';
 
-export const BaseSchema = (options?: SchemaOptions): any => {
+import { ApplyDecorators } from './common.response';
+
+export const BaseSchema = (options?: SchemaOptions): ApplyDecorators => {
   return applyDecorators(
     Schema(
       options || {
@@ -40,10 +42,4 @@ export class BaseModel extends Document {
     description: 'doc updatedAt',
   })
   updatedAt?: Date;
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'User is deleted?',
-  })
-  isDeleted?: boolean;
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Model, Document, FilterQuery } from 'mongoose';
 import { cloneDeep, isEmpty } from 'lodash';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Injectable()
 export class MongoosePaginationService {
@@ -118,12 +119,23 @@ export class MongoosePaginationService {
   }
 }
 
-export interface PaginationMetaData {
+export class PaginationMetaData {
+  @ApiProperty({ description: 'current page' })
   page: number;
+
+  @ApiProperty({ description: 'results per page' })
   perPage: number;
+
+  @ApiProperty({ description: 'total results' })
   total: number;
+
+  @ApiProperty({ description: 'previous page' })
   previousPage: number | boolean;
+
+  @ApiProperty({ description: 'next page' })
   nextPage: number | boolean;
+
+  @ApiProperty({ description: 'number of pages' })
   pageCount: number;
 }
 

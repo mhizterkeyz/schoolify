@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import {
   IsEmail,
@@ -48,10 +48,30 @@ export class User extends BaseModel {
   @IsOptional()
   name?: string;
 
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'User is deleted?',
+  })
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  isDeleted?: boolean;
+
   authenticatePassword(_password: string): boolean {
     return false;
   }
 }
+
+export class LeanUser extends PickType(User, [
+  'email',
+  'name',
+  'isDeleted',
+  'createdAt',
+  'updatedAt',
+  'id',
+]) {}
 
 export const UserSchema = SchemaFactory.createForClass(User);
 

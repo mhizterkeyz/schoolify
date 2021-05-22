@@ -5,6 +5,9 @@ interface IConfiguration {
   database: {
     url: string;
   };
+  jwt: {
+    secret: string;
+  };
 }
 
 export const configuration = (): IConfiguration => ({
@@ -14,4 +17,7 @@ export const configuration = (): IConfiguration => ({
   env: process.env.NODE_ENV || 'development',
   isTest: process.env.NODE_ENV === 'test',
   port: +process.env.PORT || 2001,
+  jwt: {
+    secret: process.env.JWT_SECRET,
+  },
 });

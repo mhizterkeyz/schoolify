@@ -16,7 +16,9 @@
     "paths": {
       "@src/*": ["./*"],
       "@util/*": ["util/*"],
-      "@logger/*": ["logger/*"]
+      "@logger/*": ["logger/*"],
+      "@user/*": ["user/*"],
+      "@authentication/*": ["authentication/*"]
     }
   },
   "include": ["./src/**/*", "./test/**/*"]

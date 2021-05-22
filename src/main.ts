@@ -9,6 +9,7 @@ import corsConfig from './cors.config';
 import { AllExceptionsFilter } from './util/exceptions/all-exception.filter';
 import { ValidationFilter } from './util/exceptions/validation.filter';
 import { APPLICATION_NAME } from './constants';
+import { ValidationPipe } from './util/pipes/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,6 +18,7 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new AllExceptionsFilter(), new ValidationFilter());
+  app.useGlobalPipes(new ValidationPipe());
 
   const configService = app.get(ConfigService);
   const port = configService.get<string>('port');
