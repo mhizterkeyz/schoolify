@@ -27,7 +27,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'signup user' })
   @ApiResponse({
-    type: ResponseDTO(LoggedInUser).responseWithData,
+    type: ResponseDTO({ base: LoggedInUser }),
     description: 'user signed up successfully',
     status: 201,
   })
