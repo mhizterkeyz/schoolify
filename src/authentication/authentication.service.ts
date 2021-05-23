@@ -1,9 +1,9 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { Logger } from '@logger/index';
+import { Logger } from '@src/logger';
 import { User } from '@src/user/schema/user.schema';
-import { UserService } from '@user/index';
+import { UserService } from '@src/user';
 import { LoggedInUser, SignupUser } from './schema/authentication.schema';
 
 @Injectable()

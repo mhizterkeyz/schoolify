@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { hash, compare } from 'bcryptjs';
 
-import { BaseModel, BaseSchema } from '@util/common/base.schema';
+import { BaseModel, BaseSchema } from '@src/util';
 
 @BaseSchema()
 export class User extends BaseModel {

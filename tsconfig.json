@@ -14,11 +14,7 @@
     "incremental": true,
     "typeRoots": ["./types", "./node_modules/@types"],
     "paths": {
-      "@src/*": ["./*"],
-      "@util/*": ["util/*"],
-      "@logger/*": ["logger/*"],
-      "@user/*": ["user/*"],
-      "@authentication/*": ["authentication/*"]
+      "@src/*": ["./*"]
     }
   },
   "include": ["./src/**/*", "./test/**/*"]

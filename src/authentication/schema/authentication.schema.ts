@@ -1,6 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 
-import { LeanUser, User } from '@user/schema/user.schema';
+import { LeanUser, User } from '@src/user';
 
 export class LoggedInUser extends LeanUser {
   @ApiProperty({ description: 'access token' })

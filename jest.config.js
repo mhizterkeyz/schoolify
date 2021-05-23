@@ -11,9 +11,5 @@ module.exports = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '@src/(.*)': '<rootDir>/src/$1',
-    '@util/(.*)': '<rootDir>/util/$1',
-    '@logger/(.*)': '<rootDir>/logger/$1',
-    '@user/(.*)': '<rootDir>/user/$1',
-    '@authentication/(.*)': '<rootDir>/authentication/$1',
   },
 };

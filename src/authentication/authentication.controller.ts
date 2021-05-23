@@ -1,11 +1,14 @@
 import { Body, Controller, Inject, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { Logger } from '@logger/index';
+import { Logger } from '@src/logger';
 import { APPLICATION_NAME, LOGGER } from '@src/constants';
-import { ResponseObject, ResponseService } from '@util/index';
-import { CommonResponse } from '@util/common/common.response';
-import { ResponseDTO } from '@util/common/response.dto';
+import {
+  ResponseObject,
+  ResponseService,
+  CommonResponse,
+  ResponseDTO,
+} from '@src/util';
 import { LoggedInUser, SignupUser } from './schema/authentication.schema';
 import { AuthenticationService } from './authentication.service';
 
