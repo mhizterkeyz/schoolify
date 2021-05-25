@@ -9,6 +9,11 @@ import { Token } from './schema/authentication.schema';
 class TokenModelMethods {
   constructor(private readonly tokenModel: Model<Token>) {}
 
+  async onModuleInit(): Promise<void> {
+    // Init collections
+    await this.tokenModel.createCollection();
+  }
+
   async createSingleToken(
     payload: Token,
     writeSession?: WriteSession,
@@ -36,11 +41,9 @@ export class TokenService extends TokenModelMethods {
     userId: string,
     writeSession: WriteSession,
   ): Promise<Token> {
-    const code = this.utilService.generateRandomString(
-      10,
-      this.utilService.alphabetFactory,
-    );
-
+    const code = this.utilService
+      .generateRandomString(10, this.utilService.alphabetFactory)
+      .toUpperCase();
     const token = await this.createSingleToken(
       { code, meta: userId } as Token,
       writeSession,

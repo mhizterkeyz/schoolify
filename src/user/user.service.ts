@@ -9,6 +9,11 @@ import { LeanUser, User } from './schema/user.schema';
 class UserModelMethods {
   constructor(private readonly userModel: Model<User>) {}
 
+  async onModuleInit(): Promise<void> {
+    // Init collections
+    await this.userModel.createCollection();
+  }
+
   async findUserByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email, isDeleted: false });
   }

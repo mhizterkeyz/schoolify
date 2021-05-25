@@ -11,7 +11,7 @@ export class NotificationService {
   private readonly emailService = new EmailService();
 
   private readonly templateEngine: Environment = configure(
-    join(__dirname, '../../../', 'templates'),
+    join(__dirname, '../../', 'templates'),
     { autoescape: true },
   );
 
