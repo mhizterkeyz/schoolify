@@ -20,7 +20,7 @@ export function ResponseDTO<TBase extends ResponseDTOType>({
 }: {
   base?: TBase | TBase[];
   type?: ResponseType;
-}): Constructor {
+} = {}): Constructor {
   const classes: Record<string, Constructor> = {};
 
   class Response {
@@ -56,8 +56,9 @@ export function ResponseDTO<TBase extends ResponseDTOType>({
     type = 'withData';
   }
 
-  // @ts-ignore
-  const name = Array.isArray(base) ? base[0].name : base.name || 'Response';
+  const name =
+    // @ts-ignore
+    (base && (Array.isArray(base) ? base[0].name : base.name)) || 'Response';
   switch (type) {
     case 'withMeta': {
       classes[name] = ResponseWithMeta;

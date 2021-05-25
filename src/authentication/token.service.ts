@@ -3,6 +3,7 @@ import { TOKEN } from '@src/constants';
 import { WriteSession } from '@src/database';
 import { UtilService } from '@src/util';
 import { Model } from 'mongoose';
+import { merge } from 'lodash';
 
 import { Token } from './schema/authentication.schema';
 
@@ -27,6 +28,16 @@ class TokenModelMethods {
 
     return this.tokenModel.create(payload);
   }
+
+  async getTokenByCode(code: string): Promise<Token | null> {
+    return this.tokenModel.findOne({ code, isDeleted: false });
+  }
+
+  async updateToken(token: Token, update: Partial<Token>): Promise<Token> {
+    merge(token, update);
+
+    return token.save();
+  }
 }
 
 export class TokenService extends TokenModelMethods {
@@ -39,7 +50,7 @@ export class TokenService extends TokenModelMethods {
 
   async createEmailVerificationToken(
     userId: string,
-    writeSession: WriteSession,
+    writeSession?: WriteSession,
   ): Promise<Token> {
     const code = this.utilService
       .generateRandomString(10, this.utilService.alphabetFactory)

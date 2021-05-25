@@ -50,17 +50,6 @@ export class User extends BaseModel {
 
   @ApiProperty({
     type: Boolean,
-    example: false,
-    description: 'User is deleted?',
-  })
-  @Prop({
-    type: Boolean,
-    default: false,
-  })
-  isDeleted?: boolean;
-
-  @ApiProperty({
-    type: Boolean,
     description: 'email is verified?',
   })
   @Prop({
@@ -68,6 +57,17 @@ export class User extends BaseModel {
     default: false,
   })
   emailVerified?: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'document is deleted?',
+  })
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  isDeleted?: boolean;
 
   authenticatePassword(_password: string): boolean {
     return false;

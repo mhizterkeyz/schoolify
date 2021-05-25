@@ -1,4 +1,11 @@
-import { Body, Controller, Inject, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Logger } from '@src/logger';
@@ -9,7 +16,12 @@ import {
   CommonResponse,
   ResponseDTO,
 } from '@src/util';
-import { LoggedInUser, SignupUser } from './schema/authentication.schema';
+import {
+  LoggedInUser,
+  ResendEmailVerificationCode,
+  SignupUser,
+  VerifyEmail,
+} from './schema/authentication.schema';
 import { AuthenticationService } from './authentication.service';
 
 @Controller('auth')
@@ -45,5 +57,48 @@ export class AuthenticationController {
     );
 
     return this.responseService.json('signup successful', loggedInUser);
+  }
+
+  @ApiOperation({ description: 'verify user email' })
+  @ApiResponse({
+    type: ResponseDTO({ base: LoggedInUser }),
+    description: 'user email verified successfully',
+    status: 200,
+  })
+  @CommonResponse({ 400: 'invalid email verification code' }, [409])
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  async verifyUserEmail(
+    @Body() { code }: VerifyEmail,
+  ): Promise<ResponseObject<LoggedInUser>> {
+    const loggedInUser = await this.authenticationService.verifyUserEmail(
+      code,
+      this.logger,
+    );
+
+    return this.responseService.json(
+      'user email verified successfully',
+      loggedInUser,
+    );
+  }
+
+  @ApiOperation({ description: 'resend email verification code' })
+  @ApiResponse({
+    type: ResponseDTO(),
+    description: 'verification email resent',
+    status: 200,
+  })
+  @CommonResponse(null, [409, 400])
+  @Post('resend-verification-email')
+  @HttpCode(HttpStatus.OK)
+  async resendEmailVerificationCode(
+    @Body() { email }: ResendEmailVerificationCode,
+  ): Promise<ResponseObject<null>> {
+    await this.authenticationService.resendEmailVerificationCode(
+      email,
+      this.logger,
+    );
+
+    return this.responseService.json('verification email resent');
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { merge } from 'lodash';
 
 import { USER } from '@src/constants';
 import { WriteSession } from '@src/database';
@@ -16,6 +17,16 @@ class UserModelMethods {
 
   async findUserByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email, isDeleted: false });
+  }
+
+  async findUserByID(_id: string): Promise<User | null> {
+    return this.userModel.findOne({ _id, isDeleted: false });
+  }
+
+  async updateUser(user: User, update: Partial<User>): Promise<User> {
+    merge(user, update);
+
+    return user.save();
   }
 
   async createSingleUser(

@@ -1,10 +1,14 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { Logger } from '@src/logger';
 import { User } from '@src/user/schema/user.schema';
 import { UserService } from '@src/user';
-import { DatabaseService } from '@src/database';
+import { DatabaseService, WriteSession } from '@src/database';
 import { NotificationService } from '@src/notification';
 import { LoggedInUser, SignupUser } from './schema/authentication.schema';
 import { TokenService } from './token.service';
@@ -31,7 +35,7 @@ export class AuthenticationService {
       });
 
       contextLogger.info('checking if user exists');
-      const { email, name } = signupPayload;
+      const { email } = signupPayload;
       const userExists = !!(await this.userService.findUserByEmail(email));
       if (userExists) {
         throw new ConflictException('User with email already exists');
@@ -42,32 +46,72 @@ export class AuthenticationService {
         signupPayload as User,
         writeSession,
       );
-      const accessToken = this.signPayload({
-        id: user.id,
-        password: user.password,
-      });
-
-      contextLogger.info('creating email verification code');
-      const token = await this.tokenService.createEmailVerificationToken(
-        user.id,
-        writeSession,
-      );
 
       contextLogger.info('sending email verification code');
-      await this.notificationService.sendEmailVerificationMessage(
-        { name, email },
-        { name, authToken: token.code },
-      );
-
-      contextLogger.info('signing user auth payload');
-      const jsonUser = this.userService.jsonUser(user);
+      await this.sendEmailVerificationCode(user, writeSession);
       await writeSession.save();
 
-      return { ...jsonUser, accessToken };
+      return this.getLoggedInUser(user);
     } catch (error) {
       await writeSession.abort();
       throw error;
     }
+  }
+
+  async verifyUserEmail(code: string, logger: Logger): Promise<LoggedInUser> {
+    const contextLogger = logger.context({ code });
+
+    contextLogger.info('getting verification token');
+    const token = await this.tokenService.getTokenByCode(code);
+    if (!token || token.isUsed) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    contextLogger.info('verifying user email');
+    const user = await this.userService.findUserByID(token.meta as string);
+    await this.userService.updateUser(user, { emailVerified: true });
+
+    contextLogger.info('marking token as used');
+    await this.tokenService.updateToken(token, { isUsed: true });
+
+    return this.getLoggedInUser(user);
+  }
+
+  async resendEmailVerificationCode(
+    email: string,
+    logger: Logger,
+  ): Promise<void> {
+    logger.context({ email }).info('finding user by email');
+    const user = await this.userService.findUserByEmail(email);
+    if (user && !user.emailVerified) {
+      logger.context({ email }).info('sending email verification code');
+      await this.sendEmailVerificationCode(user);
+    }
+  }
+
+  async sendEmailVerificationCode(
+    user: User,
+    writeSessoin?: WriteSession,
+  ): Promise<void> {
+    const { email, name } = user;
+    const token = await this.tokenService.createEmailVerificationToken(
+      user.id,
+      writeSessoin,
+    );
+    await this.notificationService.sendEmailVerificationMessage(
+      { name, email },
+      { name, authToken: token.code },
+    );
+  }
+
+  getLoggedInUser(user: User): LoggedInUser {
+    const accessToken = this.signPayload({
+      id: user.id,
+      password: user.password,
+    });
+    const jsonUser = this.userService.jsonUser(user);
+
+    return { ...jsonUser, accessToken };
   }
 
   signPayload(payload: Record<string, unknown>): string {
