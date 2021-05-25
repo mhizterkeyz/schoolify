@@ -1,5 +1,6 @@
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty, PickType } from '@nestjs/swagger';
+import { Schema } from 'mongoose';
 
 import { LeanUser, User } from '@src/user';
 import { BaseModel, BaseSchema } from '@src/util';
@@ -24,6 +25,9 @@ export class Token extends BaseModel {
 
   @Prop({ type: Boolean, default: false })
   isUsed?: boolean;
+
+  @Prop({ type: Schema.Types.Mixed })
+  meta?: unknown;
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token);

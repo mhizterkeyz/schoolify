@@ -4,3 +4,4 @@ export * from './common/base.schema';
 export * from './common/common.response';
 export * from './common/response.dto';
 export * from './util.module';
+export * from './util.service';

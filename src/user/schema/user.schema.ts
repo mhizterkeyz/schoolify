@@ -59,6 +59,16 @@ export class User extends BaseModel {
   })
   isDeleted?: boolean;
 
+  @ApiProperty({
+    type: Boolean,
+    description: 'email is verified?',
+  })
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  emailVerified?: boolean;
+
   authenticatePassword(_password: string): boolean {
     return false;
   }
@@ -71,6 +81,7 @@ export class LeanUser extends PickType(User, [
   'createdAt',
   'updatedAt',
   'id',
+  'emailVerified',
 ]) {}
 
 export const UserSchema = SchemaFactory.createForClass(User);
