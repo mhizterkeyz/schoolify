@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { configure, Environment } from 'nunjucks';
 import { join } from 'path';
-import { Address, Mail } from './email/email.schma';
 
+import { Address, Mail } from './email/email.schma';
 import { EmailService } from './email/email.service';
 import { VerifyEmailPayload } from './schema/notification.schema';
 
