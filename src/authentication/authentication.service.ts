@@ -21,33 +21,28 @@ export class AuthenticationService {
     private readonly tokenService: TokenService,
     private readonly databaseService: DatabaseService,
     private readonly notificationService: NotificationService,
-  ) {}
+    private readonly logger: Logger,
+  ) {
+    this.logger.setContext(AuthenticationService.name);
+  }
 
-  async signupUser(
-    signupPayload: SignupUser,
-    logger: Logger,
-  ): Promise<LoggedInUser> {
+  async signupUser(signupPayload: SignupUser): Promise<LoggedInUser> {
     const writeSession = await this.databaseService.startWriteSession();
     try {
-      const contextLogger = logger.context({
-        event: 'signupUser',
-        signupPayload,
-      });
-
-      contextLogger.info('checking if user exists');
+      this.logger.setMethodName('signupUser').info('checking if user exists');
       const { email } = signupPayload;
       const userExists = !!(await this.userService.findUserByEmail(email));
       if (userExists) {
         throw new ConflictException('User with email already exists');
       }
 
-      contextLogger.info('creating user document');
+      this.logger.info('creating user document');
       const user = await this.userService.createSingleUser(
         signupPayload as User,
         writeSession,
       );
 
-      contextLogger.info('sending email verification code');
+      this.logger.info('sending email verification code');
       await this.sendEmailVerificationCode(user, writeSession);
       await writeSession.save();
 
@@ -58,33 +53,32 @@ export class AuthenticationService {
     }
   }
 
-  async verifyUserEmail(code: string, logger: Logger): Promise<LoggedInUser> {
-    const contextLogger = logger.context({ code });
-
-    contextLogger.info('getting verification token');
+  async verifyUserEmail(code: string): Promise<LoggedInUser> {
+    this.logger
+      .setMethodName('verifyUserEmail')
+      .info('getting verification token');
     const token = await this.tokenService.getTokenByCode(code);
     if (!token || token.isUsed) {
       throw new BadRequestException('Invalid verification code');
     }
 
-    contextLogger.info('verifying user email');
+    this.logger.info('verifying user email');
     const user = await this.userService.findUserByID(token.meta as string);
     await this.userService.updateUser(user, { emailVerified: true });
 
-    contextLogger.info('marking token as used');
+    this.logger.info('marking token as used');
     await this.tokenService.updateToken(token, { isUsed: true });
 
     return this.getLoggedInUser(user);
   }
 
-  async resendEmailVerificationCode(
-    email: string,
-    logger: Logger,
-  ): Promise<void> {
-    logger.context({ email }).info('finding user by email');
+  async resendEmailVerificationCode(email: string): Promise<void> {
+    this.logger
+      .setMethodName('resendEmailVerificationCode')
+      .info('finding user by email');
     const user = await this.userService.findUserByEmail(email);
     if (user && !user.emailVerified) {
-      logger.context({ email }).info('sending email verification code');
+      this.logger.info('sending email verification code');
       await this.sendEmailVerificationCode(user);
     }
   }

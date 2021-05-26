@@ -1,15 +1,7 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Inject,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { Logger } from '@src/logger';
-import { APPLICATION_NAME, LOGGER } from '@src/constants';
 import {
   ResponseObject,
   ResponseService,
@@ -27,17 +19,12 @@ import { AuthenticationService } from './authentication.service';
 @Controller('auth')
 @ApiTags('Authentication')
 export class AuthenticationController {
-  private logger: Logger;
-
   constructor(
-    @Inject(LOGGER) logger: Logger,
     private readonly responseService: ResponseService,
     private readonly authenticationService: AuthenticationService,
+    private readonly logger: Logger,
   ) {
-    this.logger = logger.child({
-      logLevel: 'AuthenticationController',
-      application: APPLICATION_NAME,
-    });
+    this.logger.setContext(AuthenticationController.name);
   }
 
   @ApiOperation({ description: 'signup user' })
@@ -51,9 +38,9 @@ export class AuthenticationController {
   async signupUser(
     @Body() signupPayload: SignupUser,
   ): Promise<ResponseObject<LoggedInUser>> {
+    this.logger.setMethodName('signupUser').info('signing up user');
     const loggedInUser = await this.authenticationService.signupUser(
       signupPayload,
-      this.logger,
     );
 
     return this.responseService.json('signup successful', loggedInUser);
@@ -71,10 +58,8 @@ export class AuthenticationController {
   async verifyUserEmail(
     @Body() { code }: VerifyEmail,
   ): Promise<ResponseObject<LoggedInUser>> {
-    const loggedInUser = await this.authenticationService.verifyUserEmail(
-      code,
-      this.logger,
-    );
+    this.logger.setMethodName('verifyUserEmail').info('verifying user email');
+    const loggedInUser = await this.authenticationService.verifyUserEmail(code);
 
     return this.responseService.json(
       'user email verified successfully',
@@ -94,10 +79,10 @@ export class AuthenticationController {
   async resendEmailVerificationCode(
     @Body() { email }: ResendEmailVerificationCode,
   ): Promise<ResponseObject<null>> {
-    await this.authenticationService.resendEmailVerificationCode(
-      email,
-      this.logger,
-    );
+    this.logger
+      .setMethodName('resendEmailVerificationCode')
+      .info('resending email verification code');
+    await this.authenticationService.resendEmailVerificationCode(email);
 
     return this.responseService.json('verification email resent');
   }

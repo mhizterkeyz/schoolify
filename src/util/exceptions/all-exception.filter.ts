@@ -5,7 +5,9 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import 'colors';
+import { APPLICATION_NAME } from '@src/constants';
+
+import { Logger } from '@src/logger';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -13,9 +15,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
+    const logger = new Logger(APPLICATION_NAME);
 
     // eslint-disable-next-line no-console
-    console.debug('caught error: '.yellow, exception);
+    logger.error(exception.message, exception.stack);
     const isHttpException = exception instanceof HttpException;
     const status = isHttpException
       ? (exception as HttpException).getStatus()
