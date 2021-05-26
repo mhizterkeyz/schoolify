@@ -1,43 +1,11 @@
-/* eslint-disable no-console */
-import 'colors';
+import { Injectable, Logger as NestLogger } from '@nestjs/common';
+import { APPLICATION_NAME } from '@src/constants';
 
-class Methods {
-  constructor(protected readonly logContext: any) {}
+@Injectable()
+export class Logger extends NestLogger {
+  context = APPLICATION_NAME;
 
-  private getLogContext() {
-    return JSON.stringify({
-      ...this.logContext,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  info(...args: any[]) {
-    console.log(
-      'info: '.green,
-      ...args.map(arg => JSON.stringify(arg)),
-      this.getLogContext(),
-    );
-  }
-
-  error(...arg: any[]) {
-    console.error('error: '.red, ...arg, this.getLogContext());
-  }
-
-  debug(...arg: any[]) {
-    console.debug('debug: '.yellow, ...arg, this.getLogContext());
-  }
-}
-
-export class Logger extends Methods {
-  constructor(logContext: Record<string, unknown>) {
-    super(logContext);
-  }
-
-  context(context: Record<string, unknown>): Methods {
-    return new Methods({ ...this.logContext, ...context });
-  }
-
-  child(context: Record<string, unknown>): Logger {
-    return new Logger(context);
+  info(message: string, context?: string): void {
+    super.log(message, context);
   }
 }
