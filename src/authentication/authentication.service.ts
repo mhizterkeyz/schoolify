@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
@@ -12,6 +13,7 @@ import { DatabaseService, WriteSession } from '@src/database';
 import { NotificationService } from '@src/notification';
 import {
   LoggedInUser,
+  LoginPayload,
   ResetPasswordPayload,
   SignupUser,
 } from './schema/authentication.schema';
@@ -145,6 +147,21 @@ export class AuthenticationService {
     this.logger.info('finding and updating user by id');
     const user = await this.userService.findUserByID(userId);
     await this.userService.updateUser(user, { password });
+
+    return this.getLoggedInUser(user);
+  }
+
+  async loginUser({ email, password }: LoginPayload): Promise<LoggedInUser> {
+    this.logger.setMethodName('loginUser').info('finding user by email');
+    const user = await this.userService.findUserByEmail(email);
+    this.logger.info('validating user password');
+    const invalidPassword = await this.userService.invalidPassword(
+      user,
+      password,
+    );
+    if (!user || invalidPassword) {
+      throw new UnauthorizedException('invalid credentials');
+    }
 
     return this.getLoggedInUser(user);
   }

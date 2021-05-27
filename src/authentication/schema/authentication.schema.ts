@@ -49,6 +49,18 @@ export class ResendEmailVerificationCode {
   email: string;
 }
 
+export class LoginPayload {
+  @ApiProperty({ description: 'user email' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ description: 'password' })
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
 @BaseSchema()
 export class Token extends BaseModel {
   @Prop({ type: String, required: true })

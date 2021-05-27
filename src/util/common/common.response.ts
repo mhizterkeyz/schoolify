@@ -74,6 +74,19 @@ class ConflictError extends InternalServerError {
   })
   message: string;
 }
+class UnauthorizedError extends InternalServerError {
+  @ApiProperty({
+    description: 'status',
+    example: 401,
+  })
+  status: number;
+
+  @ApiProperty({
+    description: 'message',
+    example: 'Unauthorized',
+  })
+  message: string;
+}
 
 export type IFunction = <T, K>(...args: K[]) => T;
 export type ApplyDecorators = <TFunction extends IFunction, Y>(
@@ -83,7 +96,7 @@ export type ApplyDecorators = <TFunction extends IFunction, Y>(
   descriptor?: TypedPropertyDescriptor<Y>,
 ) => void;
 
-type commonResponse = 400 | 500 | 422 | 409;
+type commonResponse = 400 | 500 | 422 | 409 | 401;
 
 export const CommonResponse = (
   responses?: Partial<Record<commonResponse, string>>,
@@ -93,7 +106,6 @@ export const CommonResponse = (
   const resp = {
     500: 'Internal server error',
     422: 'Validation error',
-    400: 'Bad request',
     ...(responses || {}),
   };
   ommits.forEach(ommit => {
@@ -136,6 +148,16 @@ export const CommonResponse = (
         decorators.push(
           ApiResponse({
             type: ConflictError,
+            description: resp[response],
+            status: +response,
+          }),
+        );
+        break;
+      }
+      case 401: {
+        decorators.push(
+          ApiResponse({
+            type: UnauthorizedError,
             description: resp[response],
             status: +response,
           }),

@@ -10,6 +10,7 @@ import {
 } from '@src/util';
 import {
   LoggedInUser,
+  LoginPayload,
   ResendEmailVerificationCode,
   ResetPasswordPayload,
   SignupUser,
@@ -34,7 +35,7 @@ export class AuthenticationController {
     description: 'user signed up successfully',
     status: 201,
   })
-  @CommonResponse({ 409: 'email already exists' }, [400])
+  @CommonResponse({ 409: 'email already exists' })
   @Post('signup')
   async signupUser(
     @Body() signupPayload: SignupUser,
@@ -53,7 +54,7 @@ export class AuthenticationController {
     description: 'user email verified successfully',
     status: 200,
   })
-  @CommonResponse({ 400: 'invalid email verification code' }, [409])
+  @CommonResponse({ 400: 'invalid email verification code' })
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   async verifyUserEmail(
@@ -74,7 +75,7 @@ export class AuthenticationController {
     description: 'verification email resent',
     status: 200,
   })
-  @CommonResponse(null, [409, 400])
+  @CommonResponse(null)
   @Post('resend-verification-email')
   @HttpCode(HttpStatus.OK)
   async resendEmailVerificationCode(
@@ -94,7 +95,7 @@ export class AuthenticationController {
     description: 'recovery code sent to email',
     status: 200,
   })
-  @CommonResponse(null, [409, 400])
+  @CommonResponse(null)
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   async forgotPassword(
@@ -114,7 +115,7 @@ export class AuthenticationController {
     description: 'password reset successful',
     status: 200,
   })
-  @CommonResponse(null, [409])
+  @CommonResponse(null)
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   async resetPassword(
@@ -126,5 +127,25 @@ export class AuthenticationController {
     );
 
     return this.responseService.json('password reset successful', loggedInUser);
+  }
+
+  @ApiOperation({ description: 'login user' })
+  @ApiResponse({
+    type: ResponseDTO({ base: LoggedInUser }),
+    description: 'password reset successful',
+    status: 200,
+  })
+  @CommonResponse({ 401: 'invalid credentials' })
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async loginUser(
+    @Body() loginPayload: LoginPayload,
+  ): Promise<ResponseObject<LoggedInUser>> {
+    this.logger.setMethodName('loginUser').info('logging in user');
+    const loggedInUser = await this.authenticationService.loginUser(
+      loginPayload,
+    );
+
+    return this.responseService.json('log in successful', loggedInUser);
   }
 }

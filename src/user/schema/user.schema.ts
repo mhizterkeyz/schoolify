@@ -70,7 +70,7 @@ export class User extends BaseModel {
   })
   isDeleted?: boolean;
 
-  authenticatePassword(_password: string): boolean {
+  async authenticatePassword(_password: string): Promise<boolean> {
     return false;
   }
 }
