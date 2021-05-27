@@ -1,7 +1,13 @@
 import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Schema } from 'mongoose';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 import { LeanUser, User } from '@src/user';
 import { BaseModel, BaseSchema } from '@src/util';
@@ -18,6 +24,22 @@ export class VerifyEmail {
   @IsString()
   @IsNotEmpty()
   code: string;
+}
+
+export class ResetPasswordPayload {
+  @ApiProperty({ description: 'password recovery code' })
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+
+  @ApiProperty({
+    description: 'new password',
+    required: true,
+  })
+  @IsString()
+  @MinLength(8)
+  @MaxLength(20)
+  password: string;
 }
 
 export class ResendEmailVerificationCode {

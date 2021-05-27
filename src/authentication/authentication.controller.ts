@@ -11,6 +11,7 @@ import {
 import {
   LoggedInUser,
   ResendEmailVerificationCode,
+  ResetPasswordPayload,
   SignupUser,
   VerifyEmail,
 } from './schema/authentication.schema';
@@ -105,5 +106,25 @@ export class AuthenticationController {
     await this.authenticationService.sendRecoverPasswordEmail(email);
 
     return this.responseService.json('recovery email sent');
+  }
+
+  @ApiOperation({ description: 'reset user password' })
+  @ApiResponse({
+    type: ResponseDTO({ base: LoggedInUser }),
+    description: 'password reset successful',
+    status: 200,
+  })
+  @CommonResponse(null, [409])
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() resetPasswordPayload: ResetPasswordPayload,
+  ): Promise<ResponseObject<LoggedInUser>> {
+    this.logger.setMethodName('resetPassword').info('resetting user password');
+    const loggedInUser = await this.authenticationService.resetPassword(
+      resetPasswordPayload,
+    );
+
+    return this.responseService.json('password reset successful', loggedInUser);
   }
 }

@@ -10,7 +10,11 @@ import { User } from '@src/user/schema/user.schema';
 import { UserService } from '@src/user';
 import { DatabaseService, WriteSession } from '@src/database';
 import { NotificationService } from '@src/notification';
-import { LoggedInUser, SignupUser } from './schema/authentication.schema';
+import {
+  LoggedInUser,
+  ResetPasswordPayload,
+  SignupUser,
+} from './schema/authentication.schema';
 import { TokenService } from './token.service';
 
 @Injectable()
@@ -121,11 +125,28 @@ export class AuthenticationService {
           { recoveryCode },
         );
 
-        await writeSession.save;
+        await writeSession.save();
       } catch (error) {
         await writeSession.abort();
       }
     }
+  }
+
+  async resetPassword({
+    code,
+    password,
+  }: ResetPasswordPayload): Promise<LoggedInUser> {
+    this.logger
+      .setMethodName('resetPassword')
+      .info('getting user id by password recovery code');
+    const userId = await this.tokenService.getUserIDByPasswordRecoveryCode(
+      code,
+    );
+    this.logger.info('finding and updating user by id');
+    const user = await this.userService.findUserByID(userId);
+    await this.userService.updateUser(user, { password });
+
+    return this.getLoggedInUser(user);
   }
 
   getLoggedInUser(user: User): LoggedInUser {

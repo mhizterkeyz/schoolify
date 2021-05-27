@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { TOKEN } from '@src/constants';
 import { WriteSession } from '@src/database';
@@ -79,5 +80,25 @@ export class TokenService extends TokenModelMethods {
       } as Token,
       writeSession,
     );
+  }
+
+  async getUserIDByPasswordRecoveryCode(code: string): Promise<string> {
+    const token = await this.getTokenByCode(code);
+    if (!token) {
+      throw new BadRequestException('Invalid password recovery code');
+    }
+
+    const tokenExpired = moment(token.expires).isBefore(moment());
+    if (tokenExpired) {
+      throw new BadRequestException('Recovery token expired');
+    }
+
+    await this.updateToken(token, {
+      expires: moment(token.expires)
+        .subtract(1, 'hour')
+        .toDate(),
+    });
+
+    return token.meta as string;
   }
 }
