@@ -4,6 +4,7 @@ import { WriteSession } from '@src/database';
 import { UtilService } from '@src/util';
 import { Model } from 'mongoose';
 import { merge } from 'lodash';
+import * as moment from 'moment';
 
 import { Token } from './schema/authentication.schema';
 
@@ -55,11 +56,28 @@ export class TokenService extends TokenModelMethods {
     const code = this.utilService
       .generateRandomString(10, this.utilService.alphabetFactory)
       .toUpperCase();
-    const token = await this.createSingleToken(
+
+    return this.createSingleToken(
       { code, meta: userId } as Token,
       writeSession,
     );
+  }
 
-    return token;
+  async createPasswordRecoveryToken(
+    userId: string,
+    writeSession?: WriteSession,
+  ): Promise<Token> {
+    const code = this.utilService.generateRandomString(10).toUpperCase();
+
+    return this.createSingleToken(
+      {
+        code,
+        meta: userId,
+        expires: moment() // Next hour
+          .add(1, 'hour')
+          .toDate(),
+      } as Token,
+      writeSession,
+    );
   }
 }

@@ -86,4 +86,24 @@ export class AuthenticationController {
 
     return this.responseService.json('verification email resent');
   }
+
+  @ApiOperation({ description: 'recover forgotten password' })
+  @ApiResponse({
+    type: ResponseDTO(),
+    description: 'recovery code sent to email',
+    status: 200,
+  })
+  @CommonResponse(null, [409, 400])
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() { email }: ResendEmailVerificationCode,
+  ): Promise<ResponseObject<null>> {
+    this.logger
+      .setMethodName('forgotPassword')
+      .info('sending password recovery email');
+    await this.authenticationService.sendRecoverPasswordEmail(email);
+
+    return this.responseService.json('recovery email sent');
+  }
 }

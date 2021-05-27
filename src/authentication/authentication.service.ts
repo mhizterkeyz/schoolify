@@ -98,6 +98,36 @@ export class AuthenticationService {
     );
   }
 
+  async sendRecoverPasswordEmail(email: string): Promise<void> {
+    this.logger
+      .setMethodName('sendRecoverPasswordEmail')
+      .info('findind user by email');
+    const user = await this.userService.findUserByEmail(email);
+    if (user) {
+      this.logger.info('starting write session');
+      const writeSession = await this.databaseService.startWriteSession();
+      try {
+        this.logger.info('creating recovery code');
+        const {
+          code: recoveryCode,
+        } = await this.tokenService.createPasswordRecoveryToken(
+          user.id,
+          writeSession,
+        );
+
+        this.logger.info('sending password recovery email');
+        await this.notificationService.sendPasswordRecoveryMessage(
+          { email: user.email, name: user.name },
+          { recoveryCode },
+        );
+
+        await writeSession.save;
+      } catch (error) {
+        await writeSession.abort();
+      }
+    }
+  }
+
   getLoggedInUser(user: User): LoggedInUser {
     const accessToken = this.signPayload({
       id: user.id,

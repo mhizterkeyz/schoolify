@@ -4,7 +4,10 @@ import { join } from 'path';
 
 import { Address, Mail } from './email/email.schma';
 import { EmailService } from './email/email.service';
-import { VerifyEmailPayload } from './schema/notification.schema';
+import {
+  RecoverPasswordPayload,
+  VerifyEmailPayload,
+} from './schema/notification.schema';
 
 @Injectable()
 export class NotificationService {
@@ -33,6 +36,25 @@ export class NotificationService {
       this.defaultFromAddress,
       [reciepient],
       'Schoolify: Verify email',
+      body,
+    );
+
+    await this.emailService.send(mail);
+  }
+
+  async sendPasswordRecoveryMessage(
+    reciepient: Address,
+    recoverPasswordPayload: RecoverPasswordPayload,
+  ): Promise<void> {
+    const body = this.templateEngine.render(
+      'email-verification.njk',
+      recoverPasswordPayload,
+    );
+
+    const mail = new Mail(
+      this.defaultFromAddress,
+      [reciepient],
+      'Schoolify: Recover password',
       body,
     );
 
