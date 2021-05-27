@@ -8,7 +8,8 @@ import {
   MaxLength,
   IsOptional,
 } from 'class-validator';
-import { hash, compare } from 'bcryptjs';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { hash, compare, genSalt } from 'bcryptjs';
 
 import { BaseModel, BaseSchema } from '@src/util';
 
@@ -93,7 +94,8 @@ UserSchema.pre('save', async function hashUserPassword(next): Promise<void> {
   }
 
   const values = this as User;
-  const passwordHash = await hash(values.password, 8);
+  const salt = await genSalt(Math.floor(Math.random() * (15 - 10)) + 10);
+  const passwordHash = await hash(values.password, salt);
   values.password = passwordHash;
   next();
 });
