@@ -18,8 +18,9 @@ async function bootstrap() {
     bodyParser: false,
     logger: false,
   });
+  const logger = new Logger();
 
-  app.useLogger(new Logger());
+  app.useLogger(logger);
   app.useGlobalFilters(new AllExceptionsFilter(), new ValidationFilter());
   app.useGlobalPipes(new ValidationPipe());
 
@@ -52,7 +53,7 @@ async function bootstrap() {
   server.setTimeout(1200000);
 
   // eslint-disable-next-line
-  console.log(`${env} app running on: ${await app.getUrl()}`);
+  logger.info(`${env} app running on: ${await app.getUrl()}`);
 }
 
 bootstrap();
