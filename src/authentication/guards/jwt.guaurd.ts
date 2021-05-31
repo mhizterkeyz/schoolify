@@ -11,6 +11,7 @@ import { AuthenticationService } from '../authentication.service';
 
 interface IAuthPayload {
   id: string;
+  email: string;
   password: string;
   iat: number;
 }
@@ -36,8 +37,12 @@ export class JWTAuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const { password, id } = authPayload;
-    const user = await this.userService.findByIDAndPassword(id, password);
+    const { password, id, email } = authPayload;
+    const user = await this.userService.findByIDEmailAndPassword(
+      id,
+      email,
+      password,
+    );
     if (!user) {
       throw new UnauthorizedException();
     }

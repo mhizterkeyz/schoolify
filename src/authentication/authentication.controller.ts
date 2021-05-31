@@ -1,5 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { Logger } from '@src/logger';
 import {
@@ -8,6 +13,7 @@ import {
   CommonResponse,
   ResponseDTO,
 } from '@src/util';
+import { User } from '@src/user';
 import {
   LoggedInUser,
   LoginPayload,
@@ -17,6 +23,8 @@ import {
   VerifyEmail,
 } from './schema/authentication.schema';
 import { AuthenticationService } from './authentication.service';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { UseJWT } from './decorators/use-jwt.decorator';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -147,5 +155,36 @@ export class AuthenticationController {
     );
 
     return this.responseService.json('log in successful', loggedInUser);
+  }
+
+  @ApiOperation({ description: 'update user email' })
+  @ApiResponse({
+    type: ResponseDTO({ base: LoggedInUser }),
+    description: 'email updated',
+    status: 200,
+  })
+  @CommonResponse({
+    401: 'unauthorized',
+    400: 'bad request',
+    409: 'user with email already exists',
+  })
+  @UseJWT()
+  @ApiBearerAuth()
+  @Post('change-email')
+  @HttpCode(HttpStatus.OK)
+  async updateUserEmail(
+    @CurrentUser() user: User,
+    @Body() { email }: ResendEmailVerificationCode,
+  ): Promise<ResponseObject<LoggedInUser>> {
+    this.logger.setMethodName('updateUserEmail').info('updating user email');
+    const loggedInUser = await this.authenticationService.updateUserEmail(
+      user,
+      email,
+    );
+
+    return this.responseService.json(
+      'email updated and verification code sent',
+      loggedInUser,
+    );
   }
 }

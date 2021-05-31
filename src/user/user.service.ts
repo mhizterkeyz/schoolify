@@ -19,11 +19,12 @@ class UserModelMethods {
     return this.userModel.findOne({ email, isDeleted: false });
   }
 
-  async findByIDAndPassword(
+  async findByIDEmailAndPassword(
     _id: string,
+    email: string,
     password: string,
   ): Promise<User | null> {
-    return this.userModel.findOne({ _id, password, isDeleted: false });
+    return this.userModel.findOne({ _id, password, email, isDeleted: false });
   }
 
   async invalidPassword(user: User, password: string): Promise<boolean> {

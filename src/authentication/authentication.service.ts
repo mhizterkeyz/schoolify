@@ -37,10 +37,7 @@ export class AuthenticationService {
     try {
       this.logger.setMethodName('signupUser').info('checking if user exists');
       const { email } = signupPayload;
-      const userExists = !!(await this.userService.findUserByEmail(email));
-      if (userExists) {
-        throw new ConflictException('User with email already exists');
-      }
+      await this.failIfUserEmailExists(email);
 
       this.logger.info('creating user document');
       const user = await this.userService.createSingleUser(
@@ -166,9 +163,36 @@ export class AuthenticationService {
     return this.getLoggedInUser(user);
   }
 
+  async updateUserEmail(user: User, email: string): Promise<LoggedInUser> {
+    this.logger
+      .setMethodName('updateUserEmail')
+      .info('checking if email already exists');
+    await this.failIfUserEmailExists(email);
+
+    this.logger.info('updating user email');
+    await this.userService.updateUser(user, {
+      email,
+      emailVerified: false,
+    });
+
+    this.logger.info('sending email verification message');
+    await this.sendEmailVerificationCode(user);
+
+    this.logger.info('signing auth payload');
+    return this.getLoggedInUser(user);
+  }
+
+  async failIfUserEmailExists(email: string): Promise<void> {
+    const userExists = !!(await this.userService.findUserByEmail(email));
+    if (userExists) {
+      throw new ConflictException('User with email already exists');
+    }
+  }
+
   getLoggedInUser(user: User): LoggedInUser {
     const accessToken = this.signPayload({
       id: user.id,
+      email: user.email,
       password: user.password,
     });
     const jsonUser = this.userService.jsonUser(user);
