@@ -42,6 +42,10 @@ export class ResetPasswordPayload {
   password: string;
 }
 
+export class ChangePasswordPayload extends PickType(ResetPasswordPayload, [
+  'password',
+]) {}
+
 export class ResendEmailVerificationCode {
   @ApiProperty({ description: 'user email' })
   @IsEmail()

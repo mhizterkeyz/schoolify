@@ -15,6 +15,7 @@ import {
 } from '@src/util';
 import { User } from '@src/user';
 import {
+  ChangePasswordPayload,
   LoggedInUser,
   LoginPayload,
   ResendEmailVerificationCode,
@@ -186,5 +187,32 @@ export class AuthenticationController {
       'email updated and verification code sent',
       loggedInUser,
     );
+  }
+
+  @ApiOperation({ description: 'change user password' })
+  @ApiResponse({
+    type: ResponseDTO({ base: LoggedInUser }),
+    description: 'password updated',
+    status: 200,
+  })
+  @CommonResponse({
+    401: 'unauthorized',
+    400: 'bad request',
+  })
+  @UseJWT()
+  @ApiBearerAuth()
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @CurrentUser() user: User,
+    @Body() { password }: ChangePasswordPayload,
+  ): Promise<ResponseObject<LoggedInUser>> {
+    this.logger.setMethodName('updateUserEmail').info('changing user password');
+    const loggedInUser = await this.authenticationService.updateUserPassword(
+      user,
+      password,
+    );
+
+    return this.responseService.json('password updated', loggedInUser);
   }
 }

@@ -182,6 +182,19 @@ export class AuthenticationService {
     return this.getLoggedInUser(user);
   }
 
+  async updateUserPassword(
+    user: User,
+    password: string,
+  ): Promise<LoggedInUser> {
+    this.logger
+      .setMethodName('updateUserPassword')
+      .info('updating user password');
+    await this.userService.updateUser(user, { password });
+
+    this.logger.info('signing auth payload');
+    return this.getLoggedInUser(user);
+  }
+
   async failIfUserEmailExists(email: string): Promise<void> {
     const userExists = !!(await this.userService.findUserByEmail(email));
     if (userExists) {
