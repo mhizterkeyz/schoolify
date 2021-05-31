@@ -22,6 +22,7 @@ export class User extends BaseModel {
   @Prop({
     type: 'string',
     required: true,
+    unique: false,
   })
   @IsEmail()
   @IsNotEmpty()
@@ -105,3 +106,6 @@ UserSchema.methods = {
     return compare(password, this.password);
   },
 };
+
+// Payloads
+export class UpdateUserPayload extends PickType(User, ['name']) {}

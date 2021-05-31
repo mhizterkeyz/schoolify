@@ -7,6 +7,7 @@ import { configuration } from './config';
 import { DatabaseModule } from './database';
 import { LoggerModule } from './logger';
 import { NotificationModule } from './notification';
+import { SchoolModule } from './school';
 import { UserModule } from './user';
 import { UtilModule } from './util';
 
@@ -29,6 +30,7 @@ import { UtilModule } from './util';
     AuthenticationModule,
     DatabaseModule,
     NotificationModule,
+    SchoolModule,
   ],
 })
 export class AppModule {}

@@ -14,6 +14,7 @@ import {
   ResponseDTO,
 } from '@src/util';
 import { User } from '@src/user';
+import { UseJWT } from '@src/decorators';
 import {
   ChangePasswordPayload,
   LoggedInUser,
@@ -24,8 +25,7 @@ import {
   VerifyEmail,
 } from './schema/authentication.schema';
 import { AuthenticationService } from './authentication.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { UseJWT } from './decorators/use-jwt.decorator';
+import { CurrentUser } from '../decorators/current-user.decorator';
 
 @Controller('auth')
 @ApiTags('Authentication')

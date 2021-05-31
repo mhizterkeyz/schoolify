@@ -5,9 +5,10 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { AuthenticationService } from '@src/authentication';
 
 import { UserService } from '@src/user';
-import { AuthenticationService } from '../authentication.service';
 
 interface IAuthPayload {
   id: string;
@@ -18,10 +19,21 @@ interface IAuthPayload {
 
 @Injectable()
 export class JWTAuthGuard implements CanActivate {
-  constructor(
-    private readonly authenticationService: AuthenticationService,
-    private readonly userService: UserService,
-  ) {}
+  private authenticationService: AuthenticationService;
+
+  private userService: UserService;
+
+  constructor(private readonly moduleRef: ModuleRef) {}
+
+  onModuleInit(): void {
+    this.authenticationService = this.moduleRef.get<AuthenticationService>(
+      AuthenticationService,
+      { strict: false },
+    );
+    this.userService = this.moduleRef.get<UserService>(UserService, {
+      strict: false,
+    });
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

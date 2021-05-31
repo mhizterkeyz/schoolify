@@ -3,9 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { merge } from 'lodash';
 
+import { Logger } from '@src/logger';
 import { USER } from '@src/constants';
 import { WriteSession } from '@src/database';
-import { LeanUser, User } from './schema/user.schema';
+import { LeanUser, UpdateUserPayload, User } from './schema/user.schema';
 
 class UserModelMethods {
   constructor(private readonly userModel: Model<User>) {}
@@ -66,7 +67,26 @@ class UserModelMethods {
 
 @Injectable()
 export class UserService extends UserModelMethods {
-  constructor(@InjectModel(USER) userModel: Model<User>) {
+  constructor(
+    @InjectModel(USER) userModel: Model<User>,
+    private readonly logger: Logger,
+  ) {
     super(userModel);
+    this.logger.setContext(UserService.name);
+  }
+
+  async updateUserDetails(
+    user: User,
+    update: UpdateUserPayload,
+  ): Promise<LeanUser> {
+    this.logger
+      .setMethodName('updateUserDetails')
+      .info('updating user details and converting to json');
+    return this.jsonUser(await this.updateUser(user, update));
+  }
+
+  async deleteUser(user: User): Promise<LeanUser> {
+    this.logger.setMethodName('deleteUser').info('deleting user account');
+    return this.jsonUser(await this.updateUser(user, { isDeleted: true }));
   }
 }
