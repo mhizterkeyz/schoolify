@@ -179,4 +179,8 @@ export class AuthenticationService {
   signPayload(payload: Record<string, unknown>): string {
     return this.jwtService.sign(payload);
   }
+
+  decodeToken<T>(token: string): T {
+    return this.jwtService.decode(token) as T;
+  }
 }
