@@ -18,8 +18,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const logger = new Logger(APPLICATION_NAME);
 
     // eslint-disable-next-line no-console
-    logger.error(exception.message, exception.stack);
     const isHttpException = exception instanceof HttpException;
+    if (!isHttpException) {
+      logger.error(exception.message, exception.stack);
+    }
+
     const status = isHttpException
       ? (exception as HttpException).getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;

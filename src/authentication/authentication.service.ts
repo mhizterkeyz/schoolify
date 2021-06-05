@@ -40,7 +40,7 @@ export class AuthenticationService {
       await this.failIfUserEmailExists(email);
 
       this.logger.info('creating user document');
-      const user = await this.userService.createSingleUser(
+      const user = await this.userService.create(
         signupPayload as User,
         writeSession,
       );
@@ -66,11 +66,11 @@ export class AuthenticationService {
     }
 
     this.logger.info('verifying user email');
-    const user = await this.userService.findUserByID(token.meta as string);
-    await this.userService.updateUser(user, { emailVerified: true });
+    const user = await this.userService.findById(token.meta as string);
+    await this.userService.updateOne(user, { emailVerified: true });
 
     this.logger.info('marking token as used');
-    await this.tokenService.updateToken(token, { isUsed: true });
+    await this.tokenService.updateOne(token, { isUsed: true });
 
     return this.getLoggedInUser(user);
   }
@@ -142,8 +142,8 @@ export class AuthenticationService {
       code,
     );
     this.logger.info('finding and updating user by id');
-    const user = await this.userService.findUserByID(userId);
-    await this.userService.updateUser(user, { password });
+    const user = await this.userService.findById(userId);
+    await this.userService.updateOne(user, { password });
 
     return this.getLoggedInUser(user);
   }
@@ -170,7 +170,7 @@ export class AuthenticationService {
     await this.failIfUserEmailExists(email);
 
     this.logger.info('updating user email');
-    await this.userService.updateUser(user, {
+    await this.userService.updateOne(user, {
       email,
       emailVerified: false,
     });
@@ -189,7 +189,7 @@ export class AuthenticationService {
     this.logger
       .setMethodName('updateUserPassword')
       .info('updating user password');
-    await this.userService.updateUser(user, { password });
+    await this.userService.updateOne(user, { password });
 
     this.logger.info('signing auth payload');
     return this.getLoggedInUser(user);
@@ -208,7 +208,7 @@ export class AuthenticationService {
       email: user.email,
       password: user.password,
     });
-    const jsonUser = this.userService.jsonUser(user);
+    const jsonUser = this.userService.json(user);
 
     return { ...jsonUser, accessToken };
   }

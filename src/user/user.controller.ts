@@ -61,7 +61,7 @@ export class UserController {
     @CurrentUser() user: User,
   ): Promise<ResponseObject<LeanUser>> {
     this.logger.setMethodName('getCurrentUser').info('getting current user');
-    const leanUser = this.userService.jsonUser(user);
+    const leanUser = this.userService.json(user);
 
     return this.responseService.json('user details', leanUser);
   }

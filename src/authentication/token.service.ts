@@ -1,44 +1,20 @@
 import { BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { TOKEN } from '@src/constants';
-import { WriteSession } from '@src/database';
-import { UtilService } from '@src/util';
 import { Model } from 'mongoose';
-import { merge } from 'lodash';
 import * as moment from 'moment';
 
+import { TOKEN } from '@src/constants';
+import { WriteSession } from '@src/database';
+import { ModelMethods, UtilService } from '@src/util';
 import { Token } from './schema/authentication.schema';
 
-class TokenModelMethods {
-  constructor(private readonly tokenModel: Model<Token>) {}
-
-  async onModuleInit(): Promise<void> {
-    // Init collections
-    await this.tokenModel.createCollection();
-  }
-
-  async createSingleToken(
-    payload: Token,
-    writeSession?: WriteSession,
-  ): Promise<Token> {
-    if (writeSession) {
-      const session = writeSession.getSession();
-      const [token] = await this.tokenModel.create([payload], { session });
-
-      return token;
-    }
-
-    return this.tokenModel.create(payload);
+class TokenModelMethods extends ModelMethods<Token> {
+  constructor(tokenModel: Model<Token>) {
+    super(tokenModel);
   }
 
   async getTokenByCode(code: string): Promise<Token | null> {
-    return this.tokenModel.findOne({ code, isDeleted: false });
-  }
-
-  async updateToken(token: Token, update: Partial<Token>): Promise<Token> {
-    merge(token, update);
-
-    return token.save();
+    return this.model.findOne({ code, isDeleted: false });
   }
 }
 
@@ -58,10 +34,7 @@ export class TokenService extends TokenModelMethods {
       .generateRandomString(10, this.utilService.alphabetFactory)
       .toUpperCase();
 
-    return this.createSingleToken(
-      { code, meta: userId } as Token,
-      writeSession,
-    );
+    return this.create({ code, meta: userId } as Token, writeSession);
   }
 
   async createPasswordRecoveryToken(
@@ -70,7 +43,7 @@ export class TokenService extends TokenModelMethods {
   ): Promise<Token> {
     const code = this.utilService.generateRandomString(10).toUpperCase();
 
-    return this.createSingleToken(
+    return this.create(
       {
         code,
         meta: userId,
@@ -93,7 +66,7 @@ export class TokenService extends TokenModelMethods {
       throw new BadRequestException('Recovery token expired');
     }
 
-    await this.updateToken(token, {
+    await this.updateOne(token, {
       expires: moment(token.expires)
         .subtract(1, 'hour')
         .toDate(),
