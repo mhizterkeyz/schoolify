@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Model, Document, FilterQuery } from 'mongoose';
 import { cloneDeep, isEmpty } from 'lodash';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 @Injectable()
 export class MongoosePaginationService {
   async paginate<T extends Document>(
-    model: Model<Document>,
+    model: Model<T>,
     criteria: FilterQuery<Model<Document>>,
     page = 1,
     limit = 10,
@@ -139,6 +140,30 @@ export class PaginationMetaData {
   pageCount: number;
 }
 
+export class PaginationFilter {
+  @ApiProperty({
+    description: 'number of results per page',
+    example: 10,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  perPage?: number;
+
+  @ApiProperty({ description: 'page', example: 1, required: false })
+  @IsNumber()
+  @IsOptional()
+  page?: number;
+
+  @ApiProperty({
+    description: 'search query',
+    example: 'school-slug',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  search?: string;
+}
 export interface PaginationResult<T extends Document> {
   data: T[];
   metadata: PaginationMetaData;
@@ -147,9 +172,4 @@ export interface PaginationResult<T extends Document> {
 export interface AggregatePaginationResult<T> {
   data: T[];
   metadata: PaginationMetaData;
-}
-
-export interface PaginationFilter {
-  perPage?: number;
-  page?: number;
 }

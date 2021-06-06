@@ -40,7 +40,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'signup user' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'user signed up successfully',
     status: 201,
   })
@@ -59,7 +59,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'verify user email' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'user email verified successfully',
     status: 200,
   })
@@ -80,7 +80,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'resend email verification code' })
   @ApiResponse({
-    type: ResponseDTO(),
+    type: ResponseDTO().Response,
     description: 'verification email resent',
     status: 200,
   })
@@ -100,7 +100,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'recover forgotten password' })
   @ApiResponse({
-    type: ResponseDTO(),
+    type: ResponseDTO().Response,
     description: 'recovery code sent to email',
     status: 200,
   })
@@ -120,7 +120,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'reset user password' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'password reset successful',
     status: 200,
   })
@@ -140,7 +140,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'login user' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'password reset successful',
     status: 200,
   })
@@ -160,7 +160,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'update user email' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'email updated',
     status: 200,
   })
@@ -191,7 +191,7 @@ export class AuthenticationController {
 
   @ApiOperation({ description: 'change user password' })
   @ApiResponse({
-    type: ResponseDTO({ base: LoggedInUser }),
+    type: ResponseDTO(LoggedInUser).LoggedInUserResponse,
     description: 'password updated',
     status: 200,
   })

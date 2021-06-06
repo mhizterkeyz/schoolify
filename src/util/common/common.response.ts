@@ -74,6 +74,7 @@ class ConflictError extends InternalServerError {
   })
   message: string;
 }
+
 class UnauthorizedError extends InternalServerError {
   @ApiProperty({
     description: 'status',
@@ -88,6 +89,20 @@ class UnauthorizedError extends InternalServerError {
   message: string;
 }
 
+class NotFoundError extends InternalServerError {
+  @ApiProperty({
+    description: 'status',
+    example: 404,
+  })
+  status: number;
+
+  @ApiProperty({
+    description: 'message',
+    example: 'NotFound',
+  })
+  message: string;
+}
+
 export type IFunction = <T, K>(...args: K[]) => T;
 export type ApplyDecorators = <TFunction extends IFunction, Y>(
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -96,7 +111,7 @@ export type ApplyDecorators = <TFunction extends IFunction, Y>(
   descriptor?: TypedPropertyDescriptor<Y>,
 ) => void;
 
-type commonResponse = 400 | 500 | 422 | 409 | 401;
+type commonResponse = 400 | 500 | 422 | 409 | 401 | 404;
 
 export const CommonResponse = (
   responses?: Partial<Record<commonResponse, string>>,
@@ -158,6 +173,16 @@ export const CommonResponse = (
         decorators.push(
           ApiResponse({
             type: UnauthorizedError,
+            description: resp[response],
+            status: +response,
+          }),
+        );
+        break;
+      }
+      case 404: {
+        decorators.push(
+          ApiResponse({
+            type: NotFoundError,
             description: resp[response],
             status: +response,
           }),

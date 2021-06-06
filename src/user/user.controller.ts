@@ -31,7 +31,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'update user details' })
   @ApiResponse({
-    type: ResponseDTO({ base: LeanUser }),
+    type: ResponseDTO(LeanUser).LeanUserResponse,
     status: 200,
     description: 'user updated',
   })
@@ -50,7 +50,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'get user' })
   @ApiResponse({
-    type: ResponseDTO({ base: LeanUser }),
+    type: ResponseDTO(LeanUser).LeanUserResponse,
     status: 200,
     description: 'user',
   })
@@ -68,7 +68,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'delete user' })
   @ApiResponse({
-    type: ResponseDTO({ base: LeanUser }),
+    type: ResponseDTO(LeanUser).LeanUserResponse,
     status: 200,
     description: 'deleted user',
   })

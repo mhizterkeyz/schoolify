@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Model, Document, LeanDocument } from 'mongoose';
 import { merge } from 'lodash';
 
@@ -29,9 +30,13 @@ export class ModelMethods<T extends Document> {
   }
 
   async findById(_id: string): Promise<T | null> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     return this.model.findOne({ _id, isDeleted: false });
+  }
+
+  async deleteOne(doc: T): Promise<T> {
+    //  @ts-ignore
+    return this.updateOne(doc, { isDeleted: true });
   }
 
   json(doc: T): LeanDocument<T> {
