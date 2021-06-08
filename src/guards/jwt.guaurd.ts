@@ -6,9 +6,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { AuthenticationService } from '@src/authentication';
 
-import { UserService } from '@src/user';
+import { AuthenticationService } from '@src/authentication/authentication.service';
+import { UserService } from '@src/user/user.service';
 
 interface IAuthPayload {
   id: string;

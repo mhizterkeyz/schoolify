@@ -5,8 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
-import { User } from '@src/user';
+import { User } from '@src/user/schema/user.schema';
 
 @Injectable()
 export class EmailVerified implements CanActivate {

@@ -5,8 +5,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { AllowIfGuard, EmailVerified } from '@src/guards';
-import { ApplyDecorators } from '@src/util';
+import { AllowIfGuard } from '@src/guards/allow-if.guard';
+import { EmailVerified } from '@src/guards/email-verified';
+import { ApplyDecorators } from '@src/util/common/common.response';
 import { UseJWT } from './use-jwt.decorator';
 
 export type AllowIfOperands = 'email-verified';

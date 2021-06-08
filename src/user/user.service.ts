@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Logger } from '@src/logger';
 import { USER } from '@src/constants';
-import { CommonServiceMethods } from '@src/util';
+import { CommonServiceMethods } from '@src/util/common/common.service.methods';
+import { Logger } from '@src/logger/logger.service';
 import { LeanUser, UpdateUserPayload, User } from './schema/user.schema';
 
 @Injectable()

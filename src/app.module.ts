@@ -4,15 +4,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import * as mongooseAutoPopulate from 'mongoose-autopopulate';
 
-import { AuthenticationModule } from './authentication';
+import { AuthenticationModule } from './authentication/authentication.module';
 import { configuration } from './config';
-import { LoggerModule } from './logger';
-import { SchoolMiddleware } from './middlewares';
-import { NotificationModule } from './notification';
-import { SchoolController, SchoolModule } from './school';
-import { SchoolAdministratorModule } from './schooladministrator';
-import { UserModule } from './user';
-import { UtilModule } from './util';
+import { LoggerModule } from './logger/logger.module';
+import { SchoolMiddleware } from './middlewares/school.middlewar';
+import { NotificationModule } from './notification/notification.module';
+import { SchoolController } from './school/school.controller';
+import { SchoolModule } from './school/school.module';
+import { SchoolAdministratorModule } from './schooladministrator/school-administrator.module';
+import { UserModule } from './user/user.module';
+import { UtilModule } from './util/util.module';
 
 @Module({
   imports: [

@@ -10,8 +10,7 @@ import {
 } from 'class-validator';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { hash, compare, genSalt } from 'bcryptjs';
-
-import { BaseModel, BaseSchema } from '@src/util';
+import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
 
 @BaseSchema()
 export class User extends BaseModel {

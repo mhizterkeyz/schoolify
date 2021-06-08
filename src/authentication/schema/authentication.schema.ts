@@ -9,8 +9,8 @@ import {
   MinLength,
 } from 'class-validator';
 
-import { LeanUser, User } from '@src/user';
-import { BaseModel, BaseSchema } from '@src/util';
+import { LeanUser, User } from '@src/user/schema/user.schema';
+import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
 
 export class LoggedInUser extends LeanUser {
   @ApiProperty({ description: 'access token' })

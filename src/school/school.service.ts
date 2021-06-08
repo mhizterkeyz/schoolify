@@ -6,22 +6,20 @@ import {
 import { Connection, FilterQuery, isValidObjectId, Model } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 
+import { SCHOOL } from '@src/constants';
+import { CommonServiceMethods } from '@src/util/common/common.service.methods';
+import { UtilService } from '@src/util/util.service';
 import {
-  CommonServiceMethods,
   MongoosePaginationService,
   PaginationFilter,
   PaginationResult,
-  UtilService,
-} from '@src/util';
-import { SCHOOL } from '@src/constants';
-import { User } from '@src/user';
-import {
-  SchoolAdministrator,
-  SchoolAdministratorService,
-} from '@src/schooladministrator';
+} from '@src/util/pagination.service';
+import { SchoolAdministratorService } from '@src/schooladministrator/schol-administrator.service';
+import { SchoolAdministrator } from '@src/schooladministrator/schema/school-administrator.schema';
+import { User } from '@src/user/schema/user.schema';
 import { School } from './schema/school.schema';
-import { CreateSchoolDTO } from './dto';
 import { UpdateSchoolDTO } from './dto/update.dto';
+import { CreateSchoolDTO } from './dto/create.dto';
 
 @Injectable()
 export class SchoolService extends CommonServiceMethods<School> {
@@ -44,21 +42,8 @@ export class SchoolService extends CommonServiceMethods<School> {
     try {
       const { name } = createSchoolDTO;
       const slug = createSchoolDTO.slug || this.utilService.slugify(name);
-      const schoolNameExists = await this.schoolModel.exists({
-        name,
-        isDeleted: false,
-      });
-      if (schoolNameExists) {
-        throw new ConflictException('school name already taken');
-      }
-
-      const schoolSlugExists = await this.schoolModel.exists({
-        slug,
-        isDeleted: false,
-      });
-      if (schoolSlugExists) {
-        throw new ConflictException('school slug already taken');
-      }
+      await this.failIfDuplicateSchoolName(name);
+      await this.failIfDuplicateSchoolSlug(slug);
 
       const [school] = await this.schoolModel.create(
         [
@@ -88,10 +73,18 @@ export class SchoolService extends CommonServiceMethods<School> {
     }
   }
 
-  updateSchool(
+  async updateSchool(
     school: School,
     updateSchoolDTO: UpdateSchoolDTO,
   ): Promise<School> {
+    const { name, slug } = updateSchoolDTO;
+    if (name) {
+      await this.failIfDuplicateSchoolName(name);
+    }
+    if (slug) {
+      await this.failIfDuplicateSchoolSlug(slug);
+    }
+
     return this.updateDocument(school, updateSchoolDTO);
   }
 
@@ -116,6 +109,26 @@ export class SchoolService extends CommonServiceMethods<School> {
       throw error;
     } finally {
       session.endSession();
+    }
+  }
+
+  async failIfDuplicateSchoolName(name: string): Promise<void> {
+    const schoolNameExists = await this.schoolModel.exists({
+      name,
+      isDeleted: false,
+    });
+    if (schoolNameExists) {
+      throw new ConflictException('school name already taken');
+    }
+  }
+
+  async failIfDuplicateSchoolSlug(slug: string): Promise<void> {
+    const schoolSlugExists = await this.schoolModel.exists({
+      slug,
+      isDeleted: false,
+    });
+    if (schoolSlugExists) {
+      throw new ConflictException('school slug already taken');
     }
   }
 

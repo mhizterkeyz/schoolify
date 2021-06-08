@@ -8,7 +8,7 @@ import {
   IsString,
 } from 'class-validator';
 
-import { BaseModel, BaseSchema } from '@src/util';
+import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
 
 @BaseSchema()
 export class School extends BaseModel {

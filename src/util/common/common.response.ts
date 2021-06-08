@@ -103,6 +103,20 @@ class NotFoundError extends InternalServerError {
   message: string;
 }
 
+class ForbiddenError extends InternalServerError {
+  @ApiProperty({
+    description: 'status',
+    example: 403,
+  })
+  status: number;
+
+  @ApiProperty({
+    description: 'message',
+    example: 'Forbidden',
+  })
+  message: string;
+}
+
 export type IFunction = <T, K>(...args: K[]) => T;
 export type ApplyDecorators = <TFunction extends IFunction, Y>(
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -111,7 +125,7 @@ export type ApplyDecorators = <TFunction extends IFunction, Y>(
   descriptor?: TypedPropertyDescriptor<Y>,
 ) => void;
 
-type commonResponse = 400 | 500 | 422 | 409 | 401 | 404;
+type commonResponse = 400 | 500 | 422 | 409 | 401 | 404 | 403;
 
 export const CommonResponse = (
   responses?: Partial<Record<commonResponse, string>>,
@@ -183,6 +197,16 @@ export const CommonResponse = (
         decorators.push(
           ApiResponse({
             type: NotFoundError,
+            description: resp[response],
+            status: +response,
+          }),
+        );
+        break;
+      }
+      case 403: {
+        decorators.push(
+          ApiResponse({
+            type: ForbiddenError,
             description: resp[response],
             status: +response,
           }),

@@ -8,10 +8,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ClientSession, Connection } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 
-import { Logger } from '@src/logger';
 import { User } from '@src/user/schema/user.schema';
-import { UserService } from '@src/user';
-import { NotificationService } from '@src/notification';
+import { UserService } from '@src/user/user.service';
+import { NotificationService } from '@src/notification/notification.service';
+import { Logger } from '@src/logger/logger.service';
 import {
   LoggedInUser,
   LoginPayload,

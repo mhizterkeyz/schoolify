@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { SCHOOL } from '@src/constants';
-import { SchoolAdministratorModule } from '@src/schooladministrator';
+import { SchoolAdministratorModule } from '@src/schooladministrator/school-administrator.module';
 import { SchoolSchema } from './schema/school.schema';
 import { SchoolController } from './school.controller';
 import { SchoolService } from './school.service';

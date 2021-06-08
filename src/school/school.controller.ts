@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -7,18 +16,18 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { CurrentUser } from '@src/decorators';
 import { CurrentSchool } from '@src/decorators/current-school.decorator';
-import { EmailVerified, JWTAuthGuard } from '@src/guards';
-import { User } from '@src/user';
-import {
-  CommonResponse,
-  PaginationFilter,
-  ResponseDTO,
-  ResponseObject,
-  ResponseService,
-} from '@src/util';
-import { CreateSchoolDTO } from './dto';
+import { CurrentUser } from '@src/decorators/current-user.decorator';
+import { SchoolAdministrator } from '@src/decorators/school-administrator.decorator';
+import { EmailVerified } from '@src/guards/email-verified';
+import { JWTAuthGuard } from '@src/guards/jwt.guaurd';
+import { User } from '@src/user/schema/user.schema';
+import { CommonResponse } from '@src/util/common/common.response';
+import { ResponseDTO } from '@src/util/common/response.dto';
+import { PaginationFilter } from '@src/util/pagination.service';
+import { ResponseObject, ResponseService } from '@src/util/response.service';
+import { CreateSchoolDTO } from './dto/create.dto';
+import { UpdateSchoolDTO } from './dto/update.dto';
 import { School } from './schema/school.schema';
 import { SchoolService } from './school.service';
 
@@ -82,5 +91,52 @@ export class SchoolController {
   @Get(':school')
   findSchool(@CurrentSchool() school: School): ResponseObject<School> {
     return this.reponseService.json(`school found successfully`, school);
+  }
+
+  @ApiOperation({ summary: 'update school' })
+  @ApiResponse({
+    type: ResponseDTO(School).SchoolResponse,
+    status: 200,
+    description: 'school updated',
+  })
+  @CommonResponse({
+    404: 'school not found',
+    403: 'does not have permission',
+    409: 'schol name/slug already exists',
+  })
+  @ApiParam({ name: 'school' })
+  @SchoolAdministrator('can.update.school')
+  @Put(':school')
+  async updateSchool(
+    @CurrentSchool() school: School,
+    @Body() updateSchoolDTO: UpdateSchoolDTO,
+  ): Promise<ResponseObject<School>> {
+    const updatedSchool = await this.schoolService.updateSchool(
+      school,
+      updateSchoolDTO,
+    );
+
+    return this.reponseService.json('school updated', updatedSchool);
+  }
+
+  @ApiOperation({ summary: 'delete school' })
+  @ApiResponse({
+    type: ResponseDTO(School).SchoolResponse,
+    status: 200,
+    description: 'school deleted',
+  })
+  @CommonResponse(
+    { 404: 'school not found', 403: 'does not have permission' },
+    [422],
+  )
+  @ApiParam({ name: 'school' })
+  @SchoolAdministrator('can.delete.school')
+  @Delete(':school')
+  async deleteSchool(
+    @CurrentSchool() school: School,
+  ): Promise<ResponseObject<School>> {
+    const deletedSchool = await this.schoolService.deleteSchool(school);
+
+    return this.reponseService.json('school deleted', deletedSchool);
   }
 }

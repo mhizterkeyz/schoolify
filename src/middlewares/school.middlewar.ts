@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
-import { SchoolService } from '@src/school';
+import { SchoolService } from '@src/school/school.service';
 
 @Injectable()
 export class SchoolMiddleware implements NestMiddleware {

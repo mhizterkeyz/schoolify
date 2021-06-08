@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { SCHOOL_ADMINISTRATOR } from '@src/constants';
-import { SchoolAdministratorSchema } from './schema';
+import { SchoolAdministratorSchema } from './schema/school-administrator.schema';
 import { SchoolAdministratorService } from './schol-administrator.service';
 
 @Module({

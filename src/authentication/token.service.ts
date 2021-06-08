@@ -4,7 +4,8 @@ import { ClientSession, Model } from 'mongoose';
 import * as moment from 'moment';
 
 import { TOKEN } from '@src/constants';
-import { CommonServiceMethods, UtilService } from '@src/util';
+import { CommonServiceMethods } from '@src/util/common/common.service.methods';
+import { UtilService } from '@src/util/util.service';
 import { Token } from './schema/authentication.schema';
 
 export class TokenService extends CommonServiceMethods<Token> {

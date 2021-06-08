@@ -6,14 +6,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { CurrentUser, UseJWT } from '@src/decorators';
-import { Logger } from '@src/logger';
-import {
-  CommonResponse,
-  ResponseDTO,
-  ResponseObject,
-  ResponseService,
-} from '@src/util';
+import { CurrentUser } from '@src/decorators/current-user.decorator';
+import { UseJWT } from '@src/decorators/use-jwt.decorator';
+import { Logger } from '@src/logger/logger.service';
+import { CommonResponse } from '@src/util/common/common.response';
+import { ResponseDTO } from '@src/util/common/response.dto';
+import { ResponseObject, ResponseService } from '@src/util/response.service';
 import { LeanUser, UpdateUserPayload, User } from './schema/user.schema';
 import { UserService } from './user.service';
 

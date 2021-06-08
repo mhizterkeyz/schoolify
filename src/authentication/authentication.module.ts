@@ -4,8 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { configuration } from '@src/config';
 import { TOKEN } from '@src/constants';
-import { NotificationModule } from '@src/notification';
-import { UserModule } from '@src/user';
+import { NotificationModule } from '@src/notification/notification.module';
+import { UserModule } from '@src/user/user.module';
 import { AuthenticationController } from './authentication.controller';
 import { AuthenticationService } from './authentication.service';
 import { TokenSchema } from './schema/authentication.schema';

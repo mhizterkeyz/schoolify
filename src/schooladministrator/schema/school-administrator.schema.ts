@@ -2,11 +2,11 @@ import { Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Schema } from 'mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 
-import { User } from '@src/user';
-import { BaseModel, BaseSchema } from '@src/util';
 import { ADMINISTRATOR_ROLES, SCHOOL, USER } from '@src/constants';
-import { School } from '@src/school';
-import { AdministratorRole } from '@src/administratorroles';
+import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
+import { User } from '@src/user/schema/user.schema';
+import { School } from '@src/school/schema/school.schema';
+import { AdministratorRole } from '@src/administratorroles/schema/administrator-roles.schema';
 
 @BaseSchema()
 export class SchoolAdministrator extends BaseModel {
@@ -27,6 +27,7 @@ export class SchoolAdministrator extends BaseModel {
     type: Schema.Types.ObjectId,
     required: true,
     ref: SCHOOL,
+    autopopulate: true,
   })
   school: string | School;
 
@@ -34,6 +35,7 @@ export class SchoolAdministrator extends BaseModel {
   @Prop({
     type: Schema.Types.ObjectId,
     ref: ADMINISTRATOR_ROLES,
+    autopopulate: true,
   })
   role?: string | AdministratorRole;
 

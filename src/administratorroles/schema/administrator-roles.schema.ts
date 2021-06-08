@@ -2,10 +2,10 @@ import { Prop } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
 import { Schema } from 'mongoose';
 
-import { School } from '@src/school';
-import { BaseModel, BaseSchema } from '@src/util';
 import { SCHOOL } from '@src/constants';
-import { Permission, Permissions } from '../types';
+import { Permission } from '@src/types';
+import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
+import { School } from '@src/school/schema/school.schema';
 
 @BaseSchema()
 export class AdministratorRole extends BaseModel {
@@ -13,7 +13,7 @@ export class AdministratorRole extends BaseModel {
   @Prop({ type: Schema.Types.ObjectId, required: true, ref: SCHOOL })
   school: string | School;
 
-  @ApiProperty({ type: [String], example: Permissions })
+  @ApiProperty({ type: [String] })
   @Prop({ type: Array, default: [] })
   permissions?: Permission[];
 

@@ -10,7 +10,7 @@ import { AllExceptionsFilter } from './util/exceptions/all-exception.filter';
 import { ValidationFilter } from './util/exceptions/validation.filter';
 import { APPLICATION_NAME } from './constants';
 import { ValidationPipe } from './util/pipes/validation.pipe';
-import { Logger } from './logger';
+import { Logger } from './logger/logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
