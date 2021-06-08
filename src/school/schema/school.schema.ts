@@ -7,10 +7,7 @@ import {
   IsPhoneNumber,
   IsString,
 } from 'class-validator';
-import { Schema } from 'mongoose';
 
-import { USER } from '@src/constants';
-import { LeanUser, User } from '@src/user';
 import { BaseModel, BaseSchema } from '@src/util';
 
 @BaseSchema()
@@ -38,10 +35,6 @@ export class School extends BaseModel {
   @IsString()
   @IsOptional()
   slug?: string;
-
-  @ApiProperty({ type: LeanUser })
-  @Prop({ type: Schema.Types.ObjectId, ref: USER, autopopulate: true })
-  owner: User;
 
   @ApiProperty({
     type: Boolean,

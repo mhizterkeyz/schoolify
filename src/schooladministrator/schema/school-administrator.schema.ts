@@ -18,6 +18,10 @@ export class SchoolAdministrator extends BaseModel {
   })
   user: string | User;
 
+  @ApiProperty()
+  @Prop({ type: Boolean, default: false })
+  isOwner?: boolean;
+
   @ApiProperty({ type: School })
   @Prop({
     type: Schema.Types.ObjectId,

@@ -3,11 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { FilterQuery, isValidObjectId, Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+import { Connection, FilterQuery, isValidObjectId, Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 
 import {
-  ModelMethods,
+  CommonServiceMethods,
   MongoosePaginationService,
   PaginationFilter,
   PaginationResult,
@@ -15,79 +15,108 @@ import {
 } from '@src/util';
 import { SCHOOL } from '@src/constants';
 import { User } from '@src/user';
+import {
+  SchoolAdministrator,
+  SchoolAdministratorService,
+} from '@src/schooladministrator';
 import { School } from './schema/school.schema';
 import { CreateSchoolDTO } from './dto';
 import { UpdateSchoolDTO } from './dto/update.dto';
 
-class SchoolModelMethods extends ModelMethods<School> {
-  constructor(schoolModel: Model<School>) {
-    super(schoolModel);
-  }
-
-  async findSchoolByName(name: string): Promise<School> {
-    return this.model.findOne({ name, isDeleted: false });
-  }
-
-  async findByEitherIdNameOrSlugOrFail(IdNameOrSlug: string): Promise<School> {
-    const $or: any[] = [{ name: IdNameOrSlug }, { slug: IdNameOrSlug }];
-    if (isValidObjectId(IdNameOrSlug)) {
-      $or.push({ _id: IdNameOrSlug });
-    }
-
-    const school = await this.model.findOne({ $or });
-    if (!school) {
-      throw new NotFoundException('school not found');
-    }
-
-    return school;
-  }
-
-  async findSchoolBySlug(slug: string): Promise<School> {
-    return this.model.findOne({ slug, isDeleted: false });
-  }
-}
 @Injectable()
-export class SchoolService extends SchoolModelMethods {
+export class SchoolService extends CommonServiceMethods<School> {
   constructor(
-    @InjectModel(SCHOOL) model: Model<School>,
+    @InjectModel(SCHOOL) private readonly schoolModel: Model<School>,
+    @InjectConnection() private readonly connection: Connection,
     private readonly utilService: UtilService,
     private readonly paginationService: MongoosePaginationService,
+    private readonly schoolAdministratorService: SchoolAdministratorService,
   ) {
-    super(model);
+    super(schoolModel);
   }
 
   async createSchool(
     user: User,
     createSchoolDTO: CreateSchoolDTO,
   ): Promise<School> {
-    const { name } = createSchoolDTO;
-    const slug = createSchoolDTO.slug || this.utilService.slugify(name);
-    const schoolNameExists = !!(await this.findSchoolByName(name));
-    if (schoolNameExists) {
-      throw new ConflictException('school name already taken');
-    }
+    const session = await this.connection.startSession();
+    session.startTransaction();
+    try {
+      const { name } = createSchoolDTO;
+      const slug = createSchoolDTO.slug || this.utilService.slugify(name);
+      const schoolNameExists = await this.schoolModel.exists({
+        name,
+        isDeleted: false,
+      });
+      if (schoolNameExists) {
+        throw new ConflictException('school name already taken');
+      }
 
-    const schoolSlugExists = !!(await this.findSchoolBySlug(slug));
-    if (schoolSlugExists) {
-      throw new ConflictException('school slug already taken');
-    }
+      const schoolSlugExists = await this.schoolModel.exists({
+        slug,
+        isDeleted: false,
+      });
+      if (schoolSlugExists) {
+        throw new ConflictException('school slug already taken');
+      }
 
-    return this.create(({
-      owner: user,
-      slug,
-      ...createSchoolDTO,
-    } as unknown) as School);
+      const [school] = await this.schoolModel.create(
+        [
+          {
+            slug,
+            ...createSchoolDTO,
+          },
+        ],
+        { session },
+      );
+      await this.schoolAdministratorService.create(
+        {
+          user,
+          isOwner: true,
+          school,
+        } as SchoolAdministrator,
+        session,
+      );
+      await session.commitTransaction();
+
+      return school;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   updateSchool(
     school: School,
     updateSchoolDTO: UpdateSchoolDTO,
   ): Promise<School> {
-    return this.updateOne(school, updateSchoolDTO);
+    return this.updateDocument(school, updateSchoolDTO);
   }
 
-  deleteSchool(school: School): Promise<School> {
-    return this.deleteOne(school);
+  async deleteSchool(school: School): Promise<School> {
+    const session = await this.connection.startSession();
+    await session.startTransaction();
+    try {
+      await this.schoolAdministratorService.deleteManyBySchoolId(
+        school.id,
+        session,
+      );
+      const deletedSchool = await this.updateDocument(
+        school,
+        { isDeleted: true },
+        session,
+      );
+      await session.commitTransaction();
+
+      return deletedSchool;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   getSchools(
@@ -103,10 +132,24 @@ export class SchoolService extends SchoolModelMethods {
     }
 
     return this.paginationService.paginate<School>(
-      this.model,
+      this.schoolModel,
       query,
       page,
       perPage,
     );
+  }
+
+  async findByEitherIdNameOrSlugOrFail(idNameOrSlug: string): Promise<School> {
+    const $or: any = [{ name: idNameOrSlug }, { slug: idNameOrSlug }];
+    if (isValidObjectId(idNameOrSlug)) {
+      $or.push({ _id: idNameOrSlug });
+    }
+
+    const school = await this.schoolModel.findOne({ $or, isDeleted: false });
+    if (!school) {
+      throw new NotFoundException('school not found');
+    }
+
+    return school;
   }
 }

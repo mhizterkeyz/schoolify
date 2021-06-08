@@ -4,39 +4,13 @@ import { Model } from 'mongoose';
 
 import { Logger } from '@src/logger';
 import { USER } from '@src/constants';
-import { ModelMethods } from '@src/util';
+import { CommonServiceMethods } from '@src/util';
 import { LeanUser, UpdateUserPayload, User } from './schema/user.schema';
 
-class UserModelMethods extends ModelMethods<User> {
-  constructor(userModel: Model<User>) {
-    super(userModel);
-  }
-
-  async findUserByEmail(email: string): Promise<User | null> {
-    return this.model.findOne({ email, isDeleted: false });
-  }
-
-  async findByIDEmailAndPassword(
-    _id: string,
-    email: string,
-    password: string,
-  ): Promise<User | null> {
-    return this.model.findOne({ _id, password, email, isDeleted: false });
-  }
-
-  async invalidPassword(user: User, password: string): Promise<boolean> {
-    if (!user) {
-      return true;
-    }
-
-    return !(await user.authenticatePassword(password));
-  }
-}
-
 @Injectable()
-export class UserService extends UserModelMethods {
+export class UserService extends CommonServiceMethods<User> {
   constructor(
-    @InjectModel(USER) userModel: Model<User>,
+    @InjectModel(USER) private readonly userModel: Model<User>,
     private readonly logger: Logger,
   ) {
     super(userModel);
@@ -50,11 +24,25 @@ export class UserService extends UserModelMethods {
     this.logger
       .setMethodName('updateUserDetails')
       .info('updating user details and converting to json');
-    return this.json(await this.updateOne(user, update));
+    await this.updateDocument(user, update);
+    return user.toJSON();
   }
 
   async deleteUser(user: User): Promise<LeanUser> {
     this.logger.setMethodName('deleteUser').info('deleting user account');
-    return this.json(await this.updateOne(user, { isDeleted: true }));
+    await this.updateDocument(user, { isDeleted: true });
+    return user.toJSON();
+  }
+
+  async findByIDEmailAndPassword(
+    _id: string,
+    email: string,
+    password: string,
+  ): Promise<User> {
+    return this.userModel.findOne({ _id, email, password, isDeleted: false });
+  }
+
+  async findUserByEmail(email: string): Promise<User> {
+    return this.userModel.findOne({ email, isDeleted: false });
   }
 }

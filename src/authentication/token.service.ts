@@ -1,26 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import * as moment from 'moment';
 
 import { TOKEN } from '@src/constants';
-import { WriteSession } from '@src/database';
-import { ModelMethods, UtilService } from '@src/util';
+import { CommonServiceMethods, UtilService } from '@src/util';
 import { Token } from './schema/authentication.schema';
 
-class TokenModelMethods extends ModelMethods<Token> {
-  constructor(tokenModel: Model<Token>) {
-    super(tokenModel);
-  }
-
-  async getTokenByCode(code: string): Promise<Token | null> {
-    return this.model.findOne({ code, isDeleted: false });
-  }
-}
-
-export class TokenService extends TokenModelMethods {
+export class TokenService extends CommonServiceMethods<Token> {
   constructor(
-    @InjectModel(TOKEN) tokenModel: Model<Token>,
+    @InjectModel(TOKEN) private readonly tokenModel: Model<Token>,
     private readonly utilService: UtilService,
   ) {
     super(tokenModel);
@@ -28,18 +17,18 @@ export class TokenService extends TokenModelMethods {
 
   async createEmailVerificationToken(
     userId: string,
-    writeSession?: WriteSession,
+    session?: ClientSession,
   ): Promise<Token> {
     const code = this.utilService
       .generateRandomString(10, this.utilService.alphabetFactory)
       .toUpperCase();
 
-    return this.create({ code, meta: userId } as Token, writeSession);
+    return this.create({ code, meta: userId } as Token, session);
   }
 
   async createPasswordRecoveryToken(
     userId: string,
-    writeSession?: WriteSession,
+    session?: ClientSession,
   ): Promise<Token> {
     const code = this.utilService.generateRandomString(10).toUpperCase();
 
@@ -51,27 +40,32 @@ export class TokenService extends TokenModelMethods {
           .add(1, 'hour')
           .toDate(),
       } as Token,
-      writeSession,
+      session,
     );
   }
 
   async getUserIDByPasswordRecoveryCode(code: string): Promise<string> {
-    const token = await this.getTokenByCode(code);
+    const token = await this.tokenModel.findOne({
+      code,
+      isUsed: false,
+      expires: { $gt: moment().toDate() },
+      isDeleted: false,
+    });
     if (!token) {
       throw new BadRequestException('Invalid password recovery code');
     }
 
-    const tokenExpired = moment(token.expires).isBefore(moment());
-    if (tokenExpired) {
-      throw new BadRequestException('Recovery token expired');
-    }
-
-    await this.updateOne(token, {
-      expires: moment(token.expires)
+    await this.updateDocument(token, {
+      isUsed: true,
+      expires: moment()
         .subtract(1, 'hour')
         .toDate(),
     });
 
     return token.meta as string;
+  }
+
+  async getUnusedTokenByCode(code: string): Promise<Token> {
+    return this.tokenModel.findOne({ code, isDeleted: false, isUsed: false });
   }
 }

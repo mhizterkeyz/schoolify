@@ -6,11 +6,11 @@ import * as mongooseAutoPopulate from 'mongoose-autopopulate';
 
 import { AuthenticationModule } from './authentication';
 import { configuration } from './config';
-import { DatabaseModule } from './database';
 import { LoggerModule } from './logger';
 import { SchoolMiddleware } from './middlewares';
 import { NotificationModule } from './notification';
 import { SchoolController, SchoolModule } from './school';
+import { SchoolAdministratorModule } from './schooladministrator';
 import { UserModule } from './user';
 import { UtilModule } from './util';
 
@@ -36,9 +36,9 @@ import { UtilModule } from './util';
     LoggerModule,
     UserModule,
     AuthenticationModule,
-    DatabaseModule,
     NotificationModule,
     SchoolModule,
+    SchoolAdministratorModule,
   ],
 })
 export class AppModule implements NestModule {

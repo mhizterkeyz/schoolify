@@ -5,11 +5,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ClientSession, Connection } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
 
 import { Logger } from '@src/logger';
 import { User } from '@src/user/schema/user.schema';
 import { UserService } from '@src/user';
-import { DatabaseService, WriteSession } from '@src/database';
 import { NotificationService } from '@src/notification';
 import {
   LoggedInUser,
@@ -25,15 +26,16 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly tokenService: TokenService,
-    private readonly databaseService: DatabaseService,
     private readonly notificationService: NotificationService,
     private readonly logger: Logger,
+    @InjectConnection() private readonly connection: Connection,
   ) {
     this.logger.setContext(AuthenticationService.name);
   }
 
   async signupUser(signupPayload: SignupUser): Promise<LoggedInUser> {
-    const writeSession = await this.databaseService.startWriteSession();
+    const session = await this.connection.startSession();
+    session.startTransaction();
     try {
       this.logger.setMethodName('signupUser').info('checking if user exists');
       const { email } = signupPayload;
@@ -42,17 +44,19 @@ export class AuthenticationService {
       this.logger.info('creating user document');
       const user = await this.userService.create(
         signupPayload as User,
-        writeSession,
+        session,
       );
 
       this.logger.info('sending email verification code');
-      await this.sendEmailVerificationCode(user, writeSession);
-      await writeSession.save();
+      await this.sendEmailVerificationCode(user, session);
+      await session.commitTransaction();
 
       return this.getLoggedInUser(user);
     } catch (error) {
-      await writeSession.abort();
+      await session.abortTransaction();
       throw error;
+    } finally {
+      session.endSession();
     }
   }
 
@@ -60,17 +64,17 @@ export class AuthenticationService {
     this.logger
       .setMethodName('verifyUserEmail')
       .info('getting verification token');
-    const token = await this.tokenService.getTokenByCode(code);
+    const token = await this.tokenService.getUnusedTokenByCode(code);
     if (!token || token.isUsed) {
       throw new BadRequestException('Invalid verification code');
     }
 
     this.logger.info('verifying user email');
     const user = await this.userService.findById(token.meta as string);
-    await this.userService.updateOne(user, { emailVerified: true });
+    await this.userService.updateDocument(user, { emailVerified: true });
 
     this.logger.info('marking token as used');
-    await this.tokenService.updateOne(token, { isUsed: true });
+    await this.tokenService.updateDocument(token, { isUsed: true });
 
     return this.getLoggedInUser(user);
   }
@@ -88,12 +92,12 @@ export class AuthenticationService {
 
   async sendEmailVerificationCode(
     user: User,
-    writeSessoin?: WriteSession,
+    session?: ClientSession,
   ): Promise<void> {
     const { email, name } = user;
     const token = await this.tokenService.createEmailVerificationToken(
       user.id,
-      writeSessoin,
+      session,
     );
     await this.notificationService.sendEmailVerificationMessage(
       { name, email },
@@ -108,14 +112,15 @@ export class AuthenticationService {
     const user = await this.userService.findUserByEmail(email);
     if (user) {
       this.logger.info('starting write session');
-      const writeSession = await this.databaseService.startWriteSession();
+      const session = await this.connection.startSession();
+      session.startTransaction();
       try {
         this.logger.info('creating recovery code');
         const {
           code: recoveryCode,
         } = await this.tokenService.createPasswordRecoveryToken(
           user.id,
-          writeSession,
+          session,
         );
 
         this.logger.info('sending password recovery email');
@@ -124,9 +129,11 @@ export class AuthenticationService {
           { recoveryCode },
         );
 
-        await writeSession.save();
+        await session.commitTransaction();
       } catch (error) {
-        await writeSession.abort();
+        await session.abortTransaction();
+      } finally {
+        session.endSession();
       }
     }
   }
@@ -143,7 +150,7 @@ export class AuthenticationService {
     );
     this.logger.info('finding and updating user by id');
     const user = await this.userService.findById(userId);
-    await this.userService.updateOne(user, { password });
+    await this.userService.updateDocument(user, { password });
 
     return this.getLoggedInUser(user);
   }
@@ -152,10 +159,7 @@ export class AuthenticationService {
     this.logger.setMethodName('loginUser').info('finding user by email');
     const user = await this.userService.findUserByEmail(email);
     this.logger.info('validating user password');
-    const invalidPassword = await this.userService.invalidPassword(
-      user,
-      password,
-    );
+    const invalidPassword = !(await user.authenticatePassword(password));
     if (!user || invalidPassword) {
       throw new UnauthorizedException('invalid credentials');
     }
@@ -170,7 +174,7 @@ export class AuthenticationService {
     await this.failIfUserEmailExists(email);
 
     this.logger.info('updating user email');
-    await this.userService.updateOne(user, {
+    await this.userService.updateDocument(user, {
       email,
       emailVerified: false,
     });
@@ -189,7 +193,7 @@ export class AuthenticationService {
     this.logger
       .setMethodName('updateUserPassword')
       .info('updating user password');
-    await this.userService.updateOne(user, { password });
+    await this.userService.updateDocument(user, { password });
 
     this.logger.info('signing auth payload');
     return this.getLoggedInUser(user);
@@ -208,7 +212,7 @@ export class AuthenticationService {
       email: user.email,
       password: user.password,
     });
-    const jsonUser = this.userService.json(user);
+    const jsonUser = user.toJSON();
 
     return { ...jsonUser, accessToken };
   }

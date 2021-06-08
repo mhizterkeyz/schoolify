@@ -37,7 +37,7 @@ export class UserController {
   })
   @CommonResponse({ 400: 'no authorization header', 401: 'unauthenticated' })
   @UseJWT()
-  @Put()
+  @Put('me')
   async updateUser(
     @CurrentUser() user: User,
     @Body() update: UpdateUserPayload,
@@ -56,12 +56,12 @@ export class UserController {
   })
   @CommonResponse({ 400: 'no authorization header', 401: 'unauthenticated' })
   @UseJWT()
-  @Get()
+  @Get('me')
   async getCurrentUser(
     @CurrentUser() user: User,
   ): Promise<ResponseObject<LeanUser>> {
     this.logger.setMethodName('getCurrentUser').info('getting current user');
-    const leanUser = this.userService.json(user);
+    const leanUser = user.toJSON();
 
     return this.responseService.json('user details', leanUser);
   }
@@ -74,7 +74,7 @@ export class UserController {
   })
   @CommonResponse({ 400: 'no authorization header', 401: 'unauthenticated' })
   @UseJWT()
-  @Delete()
+  @Delete('me')
   async deleteCurrentUser(
     @CurrentUser() user: User,
   ): Promise<ResponseObject<LeanUser>> {
