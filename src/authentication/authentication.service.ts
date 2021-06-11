@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -38,9 +37,6 @@ export class AuthenticationService {
     session.startTransaction();
     try {
       this.logger.setMethodName('signupUser').info('checking if user exists');
-      const { email } = signupPayload;
-      await this.failIfUserEmailExists(email);
-
       this.logger.info('creating user document');
       const user = await this.userService.create(
         signupPayload as User,
@@ -171,7 +167,6 @@ export class AuthenticationService {
     this.logger
       .setMethodName('updateUserEmail')
       .info('checking if email already exists');
-    await this.failIfUserEmailExists(email);
 
     this.logger.info('updating user email');
     await this.userService.updateDocument(user, {
@@ -197,13 +192,6 @@ export class AuthenticationService {
 
     this.logger.info('signing auth payload');
     return this.getLoggedInUser(user);
-  }
-
-  async failIfUserEmailExists(email: string): Promise<void> {
-    const userExists = !!(await this.userService.findUserByEmail(email));
-    if (userExists) {
-      throw new ConflictException('User with email already exists');
-    }
   }
 
   getLoggedInUser(user: User): LoggedInUser {

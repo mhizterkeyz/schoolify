@@ -45,7 +45,7 @@ export class SchoolController {
     status: 201,
     description: 'school created',
   })
-  @CommonResponse({ 409: 'school name/slug is already taken' })
+  @CommonResponse(null)
   @ApiBearerAuth()
   @UseGuards(JWTAuthGuard, EmailVerified)
   @Post()
@@ -102,7 +102,6 @@ export class SchoolController {
   @CommonResponse({
     404: 'school not found',
     403: 'does not have permission',
-    409: 'schol name/slug already exists',
   })
   @ApiParam({ name: 'school' })
   @SchoolAdministrator('can.update.school')

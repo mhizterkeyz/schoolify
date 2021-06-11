@@ -11,13 +11,23 @@ import {
 
 import { LeanUser, User } from '@src/user/schema/user.schema';
 import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
+import { ValidateWithService } from '@src/decorators/validation/service-validation.decorator';
 
 export class LoggedInUser extends LeanUser {
   @ApiProperty({ description: 'access token' })
   accessToken: string;
 }
 
-export class SignupUser extends PickType(User, ['email', 'password', 'name']) {}
+export class SignupUser extends PickType(User, ['password', 'name']) {
+  @ApiProperty({ description: 'user email' })
+  @IsEmail()
+  @IsNotEmpty()
+  @ValidateWithService({
+    serviceName: 'UserService',
+    methodName: 'validateUserEmail',
+  })
+  email: string;
+}
 
 export class VerifyEmail {
   @ApiProperty({ description: 'verification code' })
@@ -52,6 +62,8 @@ export class ResendEmailVerificationCode {
   @IsNotEmpty()
   email: string;
 }
+
+export class UpdateUserEmailDTO extends PickType(SignupUser, ['email']) {}
 
 export class LoginPayload {
   @ApiProperty({ description: 'user email' })

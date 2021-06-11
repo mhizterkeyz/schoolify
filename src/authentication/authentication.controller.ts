@@ -19,6 +19,7 @@ import {
   ResendEmailVerificationCode,
   ResetPasswordPayload,
   SignupUser,
+  UpdateUserEmailDTO,
   VerifyEmail,
 } from './schema/authentication.schema';
 import { AuthenticationService } from './authentication.service';
@@ -41,7 +42,7 @@ export class AuthenticationController {
     description: 'user signed up successfully',
     status: 201,
   })
-  @CommonResponse({ 409: 'email already exists' })
+  @CommonResponse(null)
   @Post('signup')
   async signupUser(
     @Body() signupPayload: SignupUser,
@@ -164,7 +165,6 @@ export class AuthenticationController {
   @CommonResponse({
     401: 'unauthorized',
     400: 'bad request',
-    409: 'user with email already exists',
   })
   @UseJWT()
   @ApiBearerAuth()
@@ -172,7 +172,7 @@ export class AuthenticationController {
   @HttpCode(HttpStatus.OK)
   async updateUserEmail(
     @CurrentUser() user: User,
-    @Body() { email }: ResendEmailVerificationCode,
+    @Body() { email }: UpdateUserEmailDTO,
   ): Promise<ResponseObject<LoggedInUser>> {
     this.logger.setMethodName('updateUserEmail').info('updating user email');
     const loggedInUser = await this.authenticationService.updateUserEmail(

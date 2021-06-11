@@ -6,6 +6,7 @@ import * as mongooseAutoPopulate from 'mongoose-autopopulate';
 
 import { AuthenticationModule } from './authentication/authentication.module';
 import { configuration } from './config';
+import { ValidateWithServiceConstraint } from './decorators/validation/service-validation.decorator';
 import { LoggerModule } from './logger/logger.module';
 import { SchoolMiddleware } from './middlewares/school.middlewar';
 import { NotificationModule } from './notification/notification.module';
@@ -41,6 +42,7 @@ import { UtilModule } from './util/util.module';
     SchoolModule,
     SchoolAdministratorModule,
   ],
+  providers: [ValidateWithServiceConstraint],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

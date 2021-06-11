@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
+import { useContainer } from 'class-validator';
 
 import { AppModule } from './app.module';
 import useSwaggerUIAuthStoragePlugin from './swagger_plugin';
@@ -18,6 +19,8 @@ async function bootstrap() {
     bodyParser: false,
   });
   const logger = new Logger();
+
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.useGlobalFilters(new AllExceptionsFilter(), new ValidationFilter());
   app.useGlobalPipes(new ValidationPipe());

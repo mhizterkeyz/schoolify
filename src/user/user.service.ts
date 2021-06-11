@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { USER } from '@src/constants';
 import { CommonServiceMethods } from '@src/util/common/common.service.methods';
 import { Logger } from '@src/logger/logger.service';
+import { ValidateWithServiceResponse } from '@src/decorators/validation/service-validation.decorator';
 import { LeanUser, UpdateUserPayload, User } from './schema/user.schema';
 
 @Injectable()
@@ -44,5 +45,14 @@ export class UserService extends CommonServiceMethods<User> {
 
   async findUserByEmail(email: string): Promise<User> {
     return this.userModel.findOne({ email, isDeleted: false });
+  }
+
+  async validateUserEmail(email: string): Promise<ValidateWithServiceResponse> {
+    const emailExists = await this.userModel.exists({
+      email,
+      isDeleted: false,
+    });
+
+    return { isValid: !emailExists, message: 'user with email exists' };
   }
 }

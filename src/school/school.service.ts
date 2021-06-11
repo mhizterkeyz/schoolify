@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Connection, FilterQuery, isValidObjectId, Model } from 'mongoose';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 
@@ -17,6 +13,7 @@ import {
 import { SchoolAdministratorService } from '@src/schooladministrator/schol-administrator.service';
 import { SchoolAdministrator } from '@src/schooladministrator/schema/school-administrator.schema';
 import { User } from '@src/user/schema/user.schema';
+import { ValidateWithServiceResponse } from '@src/decorators/validation/service-validation.decorator';
 import { School } from './schema/school.schema';
 import { UpdateSchoolDTO } from './dto/update.dto';
 import { CreateSchoolDTO } from './dto/create.dto';
@@ -42,8 +39,6 @@ export class SchoolService extends CommonServiceMethods<School> {
     try {
       const { name } = createSchoolDTO;
       const slug = createSchoolDTO.slug || this.utilService.slugify(name);
-      await this.failIfDuplicateSchoolName(name);
-      await this.failIfDuplicateSchoolSlug(slug);
 
       const [school] = await this.schoolModel.create(
         [
@@ -77,14 +72,6 @@ export class SchoolService extends CommonServiceMethods<School> {
     school: School,
     updateSchoolDTO: UpdateSchoolDTO,
   ): Promise<School> {
-    const { name, slug } = updateSchoolDTO;
-    if (name) {
-      await this.failIfDuplicateSchoolName(name);
-    }
-    if (slug) {
-      await this.failIfDuplicateSchoolSlug(slug);
-    }
-
     return this.updateDocument(school, updateSchoolDTO);
   }
 
@@ -112,24 +99,28 @@ export class SchoolService extends CommonServiceMethods<School> {
     }
   }
 
-  async failIfDuplicateSchoolName(name: string): Promise<void> {
+  async validateSchoolName(name: string): Promise<ValidateWithServiceResponse> {
     const schoolNameExists = await this.schoolModel.exists({
       name,
       isDeleted: false,
     });
-    if (schoolNameExists) {
-      throw new ConflictException('school name already taken');
-    }
+
+    return {
+      isValid: !schoolNameExists,
+      message: schoolNameExists ? 'school name already taken' : '',
+    };
   }
 
-  async failIfDuplicateSchoolSlug(slug: string): Promise<void> {
+  async validateSchoolSlug(slug: string): Promise<ValidateWithServiceResponse> {
     const schoolSlugExists = await this.schoolModel.exists({
       slug,
       isDeleted: false,
     });
-    if (schoolSlugExists) {
-      throw new ConflictException('school slug already taken');
-    }
+
+    return {
+      isValid: !schoolSlugExists,
+      message: schoolSlugExists ? 'school slug already taken' : '',
+    };
   }
 
   getSchools(

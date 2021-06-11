@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 
 import { BaseModel, BaseSchema } from '@src/util/common/base.schema';
+import { ValidateWithService } from '@src/decorators/validation/service-validation.decorator';
 
 @BaseSchema()
 export class School extends BaseModel {
@@ -16,6 +17,10 @@ export class School extends BaseModel {
   @Prop({ type: String, unique: false, required: true })
   @IsString()
   @IsNotEmpty()
+  @ValidateWithService({
+    serviceName: 'SchoolService',
+    methodName: 'validateSchoolName',
+  })
   name: string;
 
   @ApiProperty({ type: String })
@@ -34,6 +39,10 @@ export class School extends BaseModel {
   @Prop({ type: String })
   @IsString()
   @IsOptional()
+  @ValidateWithService({
+    serviceName: 'SchoolService',
+    methodName: 'validateSchoolSlug',
+  })
   slug?: string;
 
   @ApiProperty({
